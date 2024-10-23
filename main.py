@@ -12,10 +12,13 @@ center = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
 
 pygame.font.init()
 # TODO: töltsunk be egy saját betütipust
-font = pygame.font.SysFont('Montserrat', 18)
+font = pygame.font.Font(None, 18)
+big_font = pygame.font.Font(None, 24)
+
 
 class Button:
-    def __init__(self, x, y, width, height, text='', font_size=36, font_color=(0, 0, 0), button_color=(200, 200, 200), hover_color=(150, 150, 150)):
+    def __init__(self, x, y, width, height, text='', font_size=36, font_color=(0, 0, 0), button_color=(200, 200, 200),
+                 hover_color=(150, 150, 150)):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.font_size = font_size
@@ -66,34 +69,69 @@ def draw_text_with_word_wrap(screen, text, font, color, x, y, max_width):
         text_surface = font.render(line, True, color)
         screen.blit(text_surface, (x, y + i * font.get_height()))
 
+
 class Module:
-    def __init__(self, x, y, kerdes, tipus, valaszok, megoldas):
+    def __init__(self, kerdes, tipus, valaszok, megoldas, rectX, rectY):
         self.valaszok = valaszok
-        self.renderRect = pygame.Rect(x, y, 320, 320)
+        self.renderRect = pygame.Rect(rectX, rectY, 320, 320)
         self.tipus = tipus
         self.megoldas = megoldas
         self.kerdes = kerdes
+        self.kivalasztott = ""
+
     def draw(self):
         pygame.draw.rect(screen, (0, 0, 0), self.renderRect)
 
-        draw_text_with_word_wrap(screen, self.kerdes, font, (255,255,255),self.renderRect.right/2, self.renderRect.bottom/2-20, 300)
+        draw_text_with_word_wrap(screen, self.kerdes, big_font, (255, 255, 255),
+                                 self.renderRect.centerx / 2 - 20 + self.renderRect.x / 2, self.renderRect.centery - 80,
+                                 240)
 
-        #gombok
+        # gombok
         x = self.renderRect.x
         for i, valasz in enumerate(self.valaszok):
             # egymás alá helyezés
-            y = self.renderRect.bottom-50
+            y = self.renderRect.bottom - 50
             if i >= 2:
                 if i == 2:
-                    x=0
-                y=self.renderRect.bottom-100
-            btn = Button(x,y, 160, 50, valasz)
+                    x = self.renderRect.x
+                y = self.renderRect.bottom - 100
+            button_color = (200, 200, 200)
+            if self.kivalasztott == valasz:
+                button_color = (46, 194, 126)
+            btn = Button(x, y, 160, 50, valasz, 36, (0, 0, 0), button_color)
             btn.draw()
+            if btn.is_clicked():
+                self.kivalasztott = valasz
             x += btn.rect.width
 
-modules = [Module(0, 0, "A Márton naphoz milyen felvonulás kapcsolódik?", "tobb", ["lámpás", "zsiroskenyer", "valami2", "valami3"], "lámpás")]
 
-jelenlegimodule = 0
+# modules = [Module("", "tobb", ["lámpás", "zsiroskenyer", "valami2", "valami3"], "lámpás", 0),
+#     Module("A Márton naphoz milyen felvonulás kapcsol2222ódik?", "tobb",
+#            ["lámpás", "zsiroskenyer", "valami2", "valami3"], "lámpás", 320),
+#     Module("A Márton naphoz milyen felvonulás kapcsol2222ód123123ik?", "tobb", ["1231", "123123", "123", "valami3"],
+#            "1231", 640)]
+
+modules = []
+
+y = 0
+x = 0
+
+for i, module in enumerate([{"kerdes": "A Márton naphoz milyen felvonulás kapcsolódik?", "tipus": "tobb",
+                             "valaszok": ["lampás", "zsiroskenyer", "valami2", "valami3"], "megoldas": "lampas"},
+                            {"kerdes": "A Márton213123123 naphoz milyen felvonulás kapcsolódik?", "tipus": "tobb",
+                             "valaszok": ["lampás", "zsiroskenyer", "valami2", "valami3"], "megoldas": "lampas"},
+                            {"kerdes": "A Márton naphoz milyen felvonulás kapcsolódik?", "tipus": "tobb",
+                             "valaszok": ["lam2222pás", "22222", "213123123", "123123"], "megoldas": "123123"},
+                            {"kerdes": "A Márton qqqq milyen felvonulás kapcsolódik?", "tipus": "tobb",
+                             "valaszok": ["11111", "22222", "211113123123", "123123"], "megoldas": "123123"},
+                            {"kerdes": "A Márton nwwwwwaphoz milyen felvonulás kapcsolódik?", "tipus": "tobb",
+                             "valaszok": ["asdasda", "2qwewe2222", "213q123123", "123123"], "megoldas": "123123"}]):
+    if i == 4:
+        y = 320
+        x -= 1280
+    if i != 0:
+        x += 320
+    modules.append(Module(module["kerdes"], module["tipus"], module["valaszok"], module["megoldas"], x, y))
 
 while running:
     for event in pygame.event.get():
@@ -102,7 +140,8 @@ while running:
 
     screen.fill("white")
 
-    modules[jelenlegimodule].draw()
+    for module in modules[:]:
+        module.draw()
 
     keys = pygame.key.get_pressed()
 
