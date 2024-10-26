@@ -1,152 +1,486 @@
 import pygame
+import defs as f
+from sys import exit
+import random as r
+
+
+#Állandok
+
+pos_order = [(197, 81), (528, 81), (859, 81),
+        (197, 416), (528, 416), (859, 416),
+        ]
+
+screen_x = 1280
+screen_y = 720
+
+
+#Változok
+
+spec_chart = bool(r.randint(0,1))
+sz_sz = f.szerianumber(spec_chart)
+matricak = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
+elemek = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
+
+
+start_page = True
+menu = False
+game = False
+running = False
+scaling = False
+
 
 pygame.init()
-# TODO: ezt a kettőt fixálni
-screen = pygame.display.set_mode((1280, 720))
-pygame.display.set_caption("PRO LIBA JÁTÉK")
+screen = pygame.display.set_mode((screen_x,screen_y))
+screen.fill((88,88,88))
+pygame.display.set_caption("Keep Hoking and Nobody Explodes")
 clock = pygame.time.Clock()
-running = True
-dt = 0
-
-center = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-
-pygame.font.init()
-# TODO: töltsunk be egy saját betütipust
-font = pygame.font.Font(None, 18)
-big_font = pygame.font.Font(None, 24)
+pygame.time.set_timer(pygame.USEREVENT, 1000)
 
 
-class Button:
-    def __init__(self, x, y, width, height, text='', font_size=36, font_color=(0, 0, 0), button_color=(200, 200, 200),
-                 hover_color=(150, 150, 150)):
-        self.rect = pygame.Rect(x, y, width, height)
-        self.text = text
-        self.font_size = font_size
-        self.font_color = font_color
-        self.button_color = button_color
-        self.hover_color = hover_color
-        self.clicked = False
-        self.font = pygame.font.Font(None, font_size)
+#Osztályok
 
-    def draw(self):
-        mouse_pos = pygame.mouse.get_pos()
+class Image():
+    def __init__(self, x:int, y:int, image:pygame.surface.Surface, scale:int=1, delay:bool=False, trans:tuple[bool, int]=(False, 255)):
+        width = image.get_width()
+        height = image.get_height()
+        self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        if trans[0]:
+            self.image.set_alpha(trans[1])
+        if not delay:
+            screen.blit(self.image, (self.rect.x, self.rect.y))
 
-        if self.rect.collidepoint(mouse_pos):
-            pygame.draw.rect(screen, self.hover_color, self.rect)
+    def delay_draw(self):
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+
+
+class Button():
+    def __init__(self, x:int, y:int, image:pygame.surface.Surface, scale:int=1):
+        width = image.get_width()
+        height = image.get_height()
+        self.scale = scale
+        self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.click = False
+        self.animate = 1
+
+    def puss_button_draw(self, puss_data:tuple[int, int, pygame.surface.Surface, int]):
+        action = False
+
+        #egér helyzete:
+        pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos) or self.click:
+            if pygame.mouse.get_pressed()[0] == 1: #le van nyomva
+                self.click = True
+                Image(puss_data[0], puss_data[1], puss_data[2], puss_data[3])#mit jelenítsen meg helyete
+                    
+
+            elif pygame.mouse.get_pressed()[0] == 0 and self.click:
+                self.click = False
+                action = True
+
+        if self.click == False:
+            screen.blit(self.image, (self.rect.x, self.rect.y))
+
+        return (action, self.click)
+
+    def cable_draw(self, action:bool, images:tuple[pygame.surface.Surface]):
+
+        if action:
+            if self.animate < len(images)-1:
+                self.animate += 0.1
+                Image(self.rect.x, self.rect.y, images[int(self.animate)], self.scale)
+
+            else:
+                Image(self.rect.x, self.rect.y, images[-1], self.scale)
+
         else:
-            pygame.draw.rect(screen, self.button_color, self.rect)
+            screen.blit(self.image, (self.rect.x, self.rect.y))
 
-        text_surface = self.font.render(self.text, True, self.font_color)
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        screen.blit(text_surface, text_rect)
+            pos = pygame.mouse.get_pos()
+            if self.rect.collidepoint(pos):
+                Image(self.rect.x, self.rect.y, images[0], self.scale)
 
-    def is_clicked(self):
-        """ Ellenőrzi, hogy rákattintottak-e a gombra """
-        mouse_pos = pygame.mouse.get_pos()
-        mouse_click = pygame.mouse.get_pressed()
-        if self.rect.collidepoint(mouse_pos) and mouse_click[0]:  # Bal egérgomb (0 index)
-            return True
-        return False
+                if pygame.mouse.get_pressed()[0] == 1:
+                    action = True
+
+        return action
 
 
-def draw_text_with_word_wrap(screen, text, font, color, x, y, max_width):
-    words = text.split(' ')
-    lines = []
-    current_line = ""
+    def button_draw(self):
+        action = False
 
-    for word in words:
-        test_line = current_line + word + " "
-        if font.size(test_line)[0] <= max_width:
-            current_line = test_line
+        pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                action = True
+
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+        return action
+
+
+
+class Input():
+    def __init__(self, x:int, y:int, w:int, h:int):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.text_x = x + 10
+        self.text_y = y - 10
+        self.input_text = ""
+        self.active = False
+        self.puffer = ""
+
+    def input_draw(self, background=(20,20,20), active_color=(255,255,255), passive_color=(88,88,88), text_color=(255,255,255)):
+
+        pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                self.active = True
+
+        elif pygame.mouse.get_pressed()[0] == 1:
+            self.active = False
+
+        if self.active:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    exit()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.active = False
+
+                    elif event.key == pygame.K_RETURN:
+                        self.puffer = self.input_text
+                        self.input_text = ""
+
+                    elif event.key == pygame.K_BACKSPACE:
+                        self.input_text = self.input_text[0:-1]
+                    else:
+                        self.input_text += event.unicode
+
+        if self.active:
+            color = active_color
         else:
-            lines.append(current_line)
-            current_line = word + " "
+            color = passive_color
 
-    if current_line:
-        lines.append(current_line)
+        pygame.draw.rect(screen, background, self.rect)
+        pygame.draw.rect(screen, color, self.rect, 2)
+        text_draw(self.input_text, self.text_x, self.text_y, text_color)
 
-    for i, line in enumerate(lines):
-        text_surface = font.render(line, True, color)
-        screen.blit(text_surface, (x, y + i * font.get_height()))
+        return(self.puffer)
 
 
-class Module:
-    def __init__(self, kerdes, tipus, valaszok, megoldas, rectX, rectY):
-        self.valaszok = valaszok
-        self.renderRect = pygame.Rect(rectX, rectY, 320, 320)
-        self.tipus = tipus
-        self.megoldas = megoldas
-        self.kerdes = kerdes
-        self.kivalasztott = ""
 
-    def draw(self):
-        pygame.draw.rect(screen, (0, 0, 0), self.renderRect)
+class Timer():
+    def __init__(self, x:int, y:int, time:int=300) -> None:
+        self.x = x
+        self.y = y
+        self.current_seconds = time
 
-        draw_text_with_word_wrap(screen, self.kerdes, big_font, (255, 255, 255),
-                                 self.renderRect.centerx / 2 - 20 + self.renderRect.x / 2, self.renderRect.centery - 80,
-                                 240)
-
-        # gombok
-        x = self.renderRect.x
-        for i, valasz in enumerate(self.valaszok):
-            # egymás alá helyezés
-            y = self.renderRect.bottom - 50
-            if i >= 2:
-                if i == 2:
-                    x = self.renderRect.x
-                y = self.renderRect.bottom - 100
-            button_color = (200, 200, 200)
-            if self.kivalasztott == valasz:
-                button_color = (46, 194, 126)
-            btn = Button(x, y, 160, 50, valasz, 36, (0, 0, 0), button_color)
-            btn.draw()
-            if btn.is_clicked():
-                self.kivalasztott = valasz
-            x += btn.rect.width
+    def timer_draw(self):
+        display_minutes = self.current_seconds // 60
+        display_seconds = self.current_seconds % 60
+        text_draw(f"{display_minutes:02}:{display_seconds:02}", self.x, self.y)
 
 
-# modules = [Module("", "tobb", ["lámpás", "zsiroskenyer", "valami2", "valami3"], "lámpás", 0),
-#     Module("A Márton naphoz milyen felvonulás kapcsol2222ódik?", "tobb",
-#            ["lámpás", "zsiroskenyer", "valami2", "valami3"], "lámpás", 320),
-#     Module("A Márton naphoz milyen felvonulás kapcsol2222ód123123ik?", "tobb", ["1231", "123123", "123", "valami3"],
-#            "1231", 640)]
 
-modules = []
 
-y = 0
-x = 0
+def change_image(x:int, y:int, images:tuple[pygame.surface.Surface], scale:int=1, close:bool = None):
+    pos = pygame.mouse.get_pos()
 
-for i, module in enumerate([{"kerdes": "A Márton naphoz milyen felvonulás kapcsolódik?", "tipus": "tobb",
-                             "valaszok": ["lampás", "zsiroskenyer", "valami2", "valami3"], "megoldas": "lampas"},
-                            {"kerdes": "A Márton213123123 naphoz milyen felvonulás kapcsolódik?", "tipus": "tobb",
-                             "valaszok": ["lampás", "zsiroskenyer", "valami2", "valami3"], "megoldas": "lampas"},
-                            {"kerdes": "A Márton naphoz milyen felvonulás kapcsolódik?", "tipus": "tobb",
-                             "valaszok": ["lam2222pás", "22222", "213123123", "123123"], "megoldas": "123123"},
-                            {"kerdes": "A Márton qqqq milyen felvonulás kapcsolódik?", "tipus": "tobb",
-                             "valaszok": ["11111", "22222", "211113123123", "123123"], "megoldas": "123123"},
-                            {"kerdes": "A Márton nwwwwwaphoz milyen felvonulás kapcsolódik?", "tipus": "tobb",
-                             "valaszok": ["asdasda", "2qwewe2222", "213q123123", "123123"], "megoldas": "123123"}]):
-    if i == 4:
-        y = 320
-        x -= 1280
-    if i != 0:
-        x += 320
-    modules.append(Module(module["kerdes"], module["tipus"], module["valaszok"], module["megoldas"], x, y))
+    alap = Image(x, y, images[0], scale)
 
-while running:
+    if close != None and len(images) > 2 and close:
+        Image(x, y, images[2], scale)
+
+    elif alap.rect.collidepoint(pos):
+        Image(x, y, images[1], scale)
+
+
+
+class Sima_drotok():
+    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+        self.index = index
+        self.image = image
+        self.done = False
+
+        self.colors = ((fekete_drot_img, fekete_drot_action), (kek_drot_img, kek_drot_action), (piros_drot_img, piros_drot_action), (sarga_drot_img, sarga_drot_action))
+        self.drotok = f.generate_drotok()
+        self.animate_button = None
+
+    def drotok_draw(self):
+        modul_draw(self)
+        for i in range(len(self.drotok)):
+            if i < 3:
+                half = 0
+            else:
+                half = 6
+            
+            if self.done and self.drotok[i] != None:
+                if self.drotok[i][1]:
+                    if self.animate_button == None:
+                        self.animate_button = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0])
+                    self.animate_button.cable_draw(self.drotok[i][1],self.colors[self.drotok[i][0]][1])
+
+                else:
+                    Image(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0])
+
+            elif self.drotok[i] != None:
+                self.done = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0]).cable_draw(self.drotok[i][1],self.colors[self.drotok[i][0]][1])
+                self.drotok[i][1] = self.done
+
+
+
+class Komplex_kabelek():
+    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+        self.index = index
+        self.pos = (0,0)
+        self.image = image
+        self.done = False
+
+        self.num = ((kabel_1_img, kabel_1_action),(kabel_2_img, kabel_2_action), (kabel_3_img, kabel_3_action), (kabel_4_img, kabel_4_action))
+        self.kabelek = []
+        for _ in range(6):
+            self.kabelek.append([r.randint(0, 3), False])
+        self.cut_it = 3
+
+        self.first = None
+        self.second = None
+        self.third = None
+        self.fourth = None
+        self.fifth = None
+        self.sixth = None
+        self.num_kabel = [
+        self.first,
+        self.second,
+        self.third,
+        self.fourth,
+        self.fifth,
+        self.sixth
+        ]
+
+    def kabelek_draw(self):
+        if self.pos == (0,0):
+            make = True
+        else:
+            make = False
+
+        modul_draw(self)
+
+        if make:
+            for i in range(len(self.kabelek)):
+                self.num_kabel[i] = Button(self.pos[0]+22+28*i, self.pos[1]+23, self.num[self.kabelek[i][0]][0])
+
+
+        for i in range(len(self.kabelek)):
+            if self.done:
+                if self.kabelek[i][1]:
+
+                    for j in range(len(self.kabelek)):
+                        if self.kabelek[j][1] == True:
+                            self.num_kabel[i].cable_draw(self.kabelek[i][1],self.num[self.kabelek[i][0]][1])
+
+                else:
+                    Image(self.pos[0]+22+28*i, self.pos[1]+23, self.num[self.kabelek[i][0]][0])
+
+            else:
+                self.kabelek[i][1] = self.num_kabel[i].cable_draw(self.kabelek[i][1],self.num[self.kabelek[i][0]][1])
+                c = 0
+                for j in range(len(self.kabelek)):
+                    if self.kabelek[j][1] == True:
+                        c += 1
+
+                if c == self.cut_it:
+                    self.done = True
+
+#Szöveg
+
+font = pygame.font.Font("Grand9K Pixel.ttf", 36) #õ -> ő
+
+def text_draw(text, x, y, text_color=(255,255,255), style=font):
+    img = style.render(text, True, text_color)
+    screen.blit(img,(x,y))
+
+#Betöltés
+
+back_img = pygame.image.load("Backs/background.png").convert_alpha()
+start_back_img = pygame.image.load("Backs/start.png").convert_alpha()
+
+
+resume_img = pygame.image.load("Buttons/resume_button.png").convert_alpha()
+resume_le = (430,250,pygame.image.load("Buttons/resume_button_le.png").convert_alpha(),10)
+quit_img = pygame.image.load("Buttons/quit_button.png").convert_alpha()
+quit_le = (520,400,pygame.image.load("Buttons/quit_button_le.png").convert_alpha(),10)
+start_img = pygame.image.load("Buttons/start_button.png").convert_alpha()
+start_le = (489,310,pygame.image.load("Buttons/start_button_le.png").convert_alpha(),10)
+
+resume_button = Button(420,240, resume_img, 10)
+quit_button = Button(510,390, quit_img, 10)
+start_button = Button(479,300, start_img, 10)
+
+
+bomba_img = pygame.image.load("Backs/bomba_alap.png").convert_alpha()
+
+sima_drot_modul_img = pygame.image.load("nat_drotok/drot_nat_224x224.png").convert_alpha()
+
+fekete_drot_img = pygame.image.load("nat_drotok/fekete/fekete_alap.png").convert_alpha()
+fekete_drot_action = (pygame.image.load("nat_drotok/fekete/fekete_kijelolve.png").convert_alpha(), pygame.image.load("nat_drotok/fekete/fekete_vagas.png").convert_alpha(), pygame.image.load("nat_drotok/fekete/fekete_kesz.png").convert_alpha())
+kek_drot_img = pygame.image.load("nat_drotok/kek/kek_alap.png").convert_alpha()
+kek_drot_action = (pygame.image.load("nat_drotok/kek/kek_kijelolve.png").convert_alpha(), pygame.image.load("nat_drotok/kek/kek_vagas.png").convert_alpha(), pygame.image.load("nat_drotok/kek/kek_kesz.png").convert_alpha())
+piros_drot_img = pygame.image.load("nat_drotok/piros/piros_alap.png").convert_alpha()
+piros_drot_action = (pygame.image.load("nat_drotok/piros/piros_kijelolve.png").convert_alpha(), pygame.image.load("nat_drotok/piros/piros_vagas.png").convert_alpha(), pygame.image.load("nat_drotok/piros/piros_kesz.png").convert_alpha())
+sarga_drot_img = pygame.image.load("nat_drotok/sarga/sarga_alap.png").convert_alpha()
+sarga_drot_action = (pygame.image.load("nat_drotok/sarga/sarga_kijelolve.png").convert_alpha(), pygame.image.load("nat_drotok/sarga/sarga_vagas.png").convert_alpha(), pygame.image.load("nat_drotok/sarga/sarga_kesz.png").convert_alpha())
+
+komplex_kabel_modul_img = pygame.image.load("kom_kabel/kabel_kom_224x224.png").convert_alpha()
+
+kabel_1_img = pygame.image.load("kom_kabel/1_kabel/1_alap.png").convert_alpha()
+kabel_1_action = (pygame.image.load("kom_kabel/1_kabel/1_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/1_kabel/1_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/1_kabel/1_kesz.png").convert_alpha())
+kabel_2_img = pygame.image.load("kom_kabel/2_kabel/2_alap.png").convert_alpha()
+kabel_2_action = (pygame.image.load("kom_kabel/2_kabel/2_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/2_kabel/2_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/2_kabel/2_kesz.png").convert_alpha())
+kabel_3_img = pygame.image.load("kom_kabel/3_kabel/3_alap.png").convert_alpha()
+kabel_3_action = (pygame.image.load("kom_kabel/3_kabel/3_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/3_kabel/3_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/3_kabel/3_kesz.png").convert_alpha())
+kabel_4_img = pygame.image.load("kom_kabel/4_kabel/4_alap.png").convert_alpha()
+kabel_4_action = (pygame.image.load("kom_kabel/4_kabel/4_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/4_kabel/4_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/4_kabel/4_kesz.png").convert_alpha())
+
+jel_alap = pygame.image.load("Jelzok/alap_keret.png").convert_alpha()
+jel_kijel = pygame.image.load("Jelzok/kijelol_keret.png").convert_alpha()
+jel_kesz = pygame.image.load("Jelzok/kesz_keret.png").convert_alpha()
+
+jelek = (jel_alap, jel_kijel, jel_kesz)
+
+
+explosion_sound = pygame.mixer.Sound("Hangok/explosion.mp3")
+honk_1 = pygame.mixer.Sound("Hangok/honk_1.mp3")
+honk_2 = pygame.mixer.Sound("Hangok/honk_2.mp3")
+honk_3 = pygame.mixer.Sound("Hangok/honk_3.mp3")
+hoking = (honk_1, honk_2, honk_3)
+#honk_1.play()
+
+
+osztaly_input = Input(500, 230, 200, 40)
+visszaszamlalo = Timer(10, 25)
+
+#összes modul hivatkozása
+s_d = Sima_drotok(None, sima_drot_modul_img)
+k_k = Komplex_kabelek(None, komplex_kabel_modul_img)
+j = Sima_drotok(None, sima_drot_modul_img)
+l = Sima_drotok(None, sima_drot_modul_img)
+g = Sima_drotok(None, sima_drot_modul_img)
+ido = Sima_drotok(None, sima_drot_modul_img)
+modulok = [s_d, k_k, j, l, g, ido]
+
+#a modulok szét szórása
+r_list = []
+for i in range(len(modulok)):
+    r_list.append(i)
+
+for i in range(len(modulok)):
+    rand_index = r.randint(0, len(r_list)-1)
+    modulok[i].index = r_list[rand_index]
+    del r_list[rand_index]
+
+modul_kesz = []
+for i in range(6):
+    modul_kesz.append(None)
+
+
+
+def modul_draw(self, p_order = pos_order, jel = jelek, m_kesz = modul_kesz):
+    m_kesz[self.index] = self.done
+    if self.index != None:
+        self.pos = p_order[self.index]
+
+    screen.blit(self.image, self.pos)
+    change_image(self.pos[0]+1, self.pos[1]+1, jel, 1, self.done)
+
+
+
+#Folyamat
+
+while True:
+
+    if game:
+        screen.fill((88,88,88))
+        Image(141,25, bomba_img)
+        s_d.drotok_draw()
+        k_k.kabelek_draw()
+        visszaszamlalo.timer_draw()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    game = False
+                    menu = True
+
+            if event.type == pygame.USEREVENT:
+                visszaszamlalo.current_seconds -= 1
+
+
+    elif start_page:
+        Image(0,0,start_back_img)
+
+        osztaly_input.input_draw()
+
+        if start_button.puss_button_draw(start_le)[0]:
+            if osztaly_input.input_text != "":
+                osztaly_input.puffer = osztaly_input.input_text
+                osztaly_input.input_text = ""
+
+            start_page = False
+            game = True
+            running = True
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    start_page = False
+                    menu = True
+
+
+    elif menu:
+        back = Image(0,0,back_img,screen_x, False, (True, 50))
+
+        if quit_button.puss_button_draw(quit_le)[0]:
+            break
+                
+        if resume_button.puss_button_draw(resume_le)[0]:
+            menu = False
+
+            if running:
+                game = True
+            else:
+                start_page = True
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    menu = False
+                    start_page = True
+
+            if event.type == pygame.USEREVENT:
+                visszaszamlalo.current_seconds -= 1
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
-
-    screen.fill("white")
-
-    for module in modules[:]:
-        module.draw()
-
-    keys = pygame.key.get_pressed()
+            pygame.quit()
+            exit()
 
     pygame.display.flip()
-
-    dt = clock.tick(60) / 1000
+    clock.tick(60)
 
 pygame.quit()
