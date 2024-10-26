@@ -39,7 +39,7 @@ pygame.time.set_timer(pygame.USEREVENT, 1000)
 
 #Osztályok
 
-class Image():
+class Image:
     def __init__(self, x:int, y:int, image:pygame.surface.Surface, scale:int=1, delay:bool=False, trans:tuple[bool, int]=(False, 255)):
         width = image.get_width()
         height = image.get_height()
@@ -56,7 +56,7 @@ class Image():
 
 
 
-class Button():
+class Button:
     def __init__(self, x:int, y:int, image:pygame.surface.Surface, scale:int=1):
         width = image.get_width()
         height = image.get_height()
@@ -82,10 +82,10 @@ class Button():
                 self.click = False
                 action = True
 
-        if self.click == False:
+        if not self.click:
             screen.blit(self.image, (self.rect.x, self.rect.y))
 
-        return (action, self.click)
+        return action, self.click
 
     def cable_draw(self, action:bool, images:tuple[pygame.surface.Surface]):
 
@@ -123,7 +123,7 @@ class Button():
 
 
 
-class Input():
+class Input:
     def __init__(self, x:int, y:int, w:int, h:int):
         self.rect = pygame.Rect(x, y, w, h)
         self.text_x = x + 10
@@ -149,12 +149,12 @@ class Input():
                     exit()
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
+                    # sortörést nem fogadunk el.
+                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
                         self.active = False
 
-                    elif event.key == pygame.K_RETURN:
-                        self.puffer = self.input_text
-                        self.input_text = ""
+                    #    self.puffer = self.input_text
+                    #    self.input_text = ""
 
                     elif event.key == pygame.K_BACKSPACE:
                         self.input_text = self.input_text[0:-1]
@@ -170,11 +170,11 @@ class Input():
         pygame.draw.rect(screen, color, self.rect, 2)
         text_draw(self.input_text, self.text_x, self.text_y, text_color)
 
-        return(self.puffer)
+        return self.puffer
 
 
 
-class Timer():
+class Timer:
     def __init__(self, x:int, y:int, time:int=300) -> None:
         self.x = x
         self.y = y
@@ -185,15 +185,12 @@ class Timer():
         display_seconds = self.current_seconds % 60
         text_draw(f"{display_minutes:02}:{display_seconds:02}", self.x, self.y)
 
-
-
-
 def change_image(x:int, y:int, images:tuple[pygame.surface.Surface], scale:int=1, close:bool = None):
     pos = pygame.mouse.get_pos()
 
     alap = Image(x, y, images[0], scale)
 
-    if close != None and len(images) > 2 and close:
+    if close is not None and len(images) > 2 and close:
         Image(x, y, images[2], scale)
 
     elif alap.rect.collidepoint(pos):
@@ -201,8 +198,9 @@ def change_image(x:int, y:int, images:tuple[pygame.surface.Surface], scale:int=1
 
 
 
-class Sima_drotok():
+class SimaDrot:
     def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+        self.pos = None
         self.index = index
         self.image = image
         self.done = False
@@ -219,22 +217,22 @@ class Sima_drotok():
             else:
                 half = 6
             
-            if self.done and self.drotok[i] != None:
+            if self.done and self.drotok[i] is not None:
                 if self.drotok[i][1]:
-                    if self.animate_button == None:
+                    if self.animate_button is None:
                         self.animate_button = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0])
                     self.animate_button.cable_draw(self.drotok[i][1],self.colors[self.drotok[i][0]][1])
 
                 else:
                     Image(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0])
 
-            elif self.drotok[i] != None:
+            elif self.drotok[i] is not None:
                 self.done = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0]).cable_draw(self.drotok[i][1],self.colors[self.drotok[i][0]][1])
                 self.drotok[i][1] = self.done
 
 
 
-class Komplex_kabelek():
+class KomplexKabel:
     def __init__(self, index:int, image:pygame.surface.Surface) -> None:
         self.index = index
         self.pos = (0,0)
@@ -280,7 +278,7 @@ class Komplex_kabelek():
                 if self.kabelek[i][1]:
 
                     for j in range(len(self.kabelek)):
-                        if self.kabelek[j][1] == True:
+                        if self.kabelek[j][1]:
                             self.num_kabel[i].cable_draw(self.kabelek[i][1],self.num[self.kabelek[i][0]][1])
 
                 else:
@@ -290,7 +288,7 @@ class Komplex_kabelek():
                 self.kabelek[i][1] = self.num_kabel[i].cable_draw(self.kabelek[i][1],self.num[self.kabelek[i][0]][1])
                 c = 0
                 for j in range(len(self.kabelek)):
-                    if self.kabelek[j][1] == True:
+                    if self.kabelek[j][1]:
                         c += 1
 
                 if c == self.cut_it:
@@ -365,12 +363,12 @@ osztaly_input = Input(500, 230, 200, 40)
 visszaszamlalo = Timer(10, 25)
 
 #összes modul hivatkozása
-s_d = Sima_drotok(None, sima_drot_modul_img)
-k_k = Komplex_kabelek(None, komplex_kabel_modul_img)
-j = Sima_drotok(None, sima_drot_modul_img)
-l = Sima_drotok(None, sima_drot_modul_img)
-g = Sima_drotok(None, sima_drot_modul_img)
-ido = Sima_drotok(None, sima_drot_modul_img)
+s_d = SimaDrot(None, sima_drot_modul_img)
+k_k = KomplexKabel(None, komplex_kabel_modul_img)
+j = SimaDrot(None, sima_drot_modul_img)
+l = SimaDrot(None, sima_drot_modul_img)
+g = SimaDrot(None, sima_drot_modul_img)
+ido = SimaDrot(None, sima_drot_modul_img)
 modulok = [s_d, k_k, j, l, g, ido]
 
 #a modulok szét szórása
@@ -389,9 +387,13 @@ for i in range(6):
 
 
 
-def modul_draw(self, p_order = pos_order, jel = jelek, m_kesz = modul_kesz):
+def modul_draw(self, p_order=None, jel = jelek, m_kesz=None):
+    if p_order is None:
+        p_order = pos_order
+    if m_kesz is None:
+        m_kesz = modul_kesz
     m_kesz[self.index] = self.done
-    if self.index != None:
+    if self.index is not None:
         self.pos = p_order[self.index]
 
     screen.blit(self.image, self.pos)
@@ -470,8 +472,10 @@ while True:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     menu = False
-                    start_page = True
-
+                    if running:
+                        game = True
+                    else:
+                        start_page = True
             if event.type == pygame.USEREVENT:
                 visszaszamlalo.current_seconds -= 1
 
