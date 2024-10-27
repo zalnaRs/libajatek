@@ -32,7 +32,7 @@ scaling = False
 pygame.init()
 screen = pygame.display.set_mode((screen_x,screen_y))
 screen.fill((88,88,88))
-pygame.display.set_caption("Keep Hoking and Nobody Explodes")
+pygame.display.set_caption("Keep Honking and Nobody Explodes")
 clock = pygame.time.Clock()
 pygame.time.set_timer(pygame.USEREVENT, 1000)
 
@@ -85,7 +85,7 @@ class Button:
         if not self.click:
             screen.blit(self.image, (self.rect.x, self.rect.y))
 
-        return action, self.click
+        return action
 
     def cable_draw(self, action:bool, images:tuple[pygame.surface.Surface]):
 
@@ -110,7 +110,35 @@ class Button:
         return action
 
 
-    def button_draw(self):
+    def button_draw(self, images:tuple[pygame.surface.Surface], close:bool=None):
+        action = False
+
+        if close is not None and not close:
+
+            pos = pygame.mouse.get_pos()
+            if self.rect.collidepoint(pos) or self.click:
+                if pygame.mouse.get_pressed()[0] == 1:
+                    self.click = True
+                    Image(self.rect.x, self.rect.y, images[1], self.scale)
+                        
+
+                elif pygame.mouse.get_pressed()[0] == 0 and self.click:
+                    Image(self.rect.x, self.rect.y, images[2], self.scale)
+                    self.click = False
+                    action = True
+
+                elif not self.click:
+                    Image(self.rect.x, self.rect.y, images[0], self.scale)
+
+            elif not self.click:
+                screen.blit(self.image, (self.rect.x, self.rect.y))
+
+        else:
+            Image(self.rect.x, self.rect.y, images[2], self.scale)
+
+        return action, self.click
+
+    def simple_button_draw(self):
         action = False
 
         pos = pygame.mouse.get_pos()
@@ -127,7 +155,9 @@ class Input:
     def __init__(self, x:int, y:int, w:int, h:int):
         self.rect = pygame.Rect(x, y, w, h)
         self.text_x = x + 10
-        self.text_y = y - 10
+        self.text_y = y - (h //20)*(h //20)
+        self.text_size = h - (10+h//30)
+        self.max = w // self.text_size
         self.input_text = ""
         self.active = False
         self.puffer = ""
@@ -158,7 +188,7 @@ class Input:
 
                     elif event.key == pygame.K_BACKSPACE:
                         self.input_text = self.input_text[0:-1]
-                    else:
+                    elif len(self.input_text) < self.max:
                         self.input_text += event.unicode
 
         if self.active:
@@ -168,7 +198,7 @@ class Input:
 
         pygame.draw.rect(screen, background, self.rect)
         pygame.draw.rect(screen, color, self.rect, 2)
-        text_draw(self.input_text, self.text_x, self.text_y, text_color)
+        text_draw(self.input_text, self.text_x, self.text_y, text_color, pygame.font.Font("Grand9K Pixel.ttf", self.text_size))
 
         return self.puffer
 
@@ -294,6 +324,35 @@ class KomplexKabel:
                 if c == self.cut_it:
                     self.done = True
 
+class Gomb:
+    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+        self.pos = (0,0)
+        self.index = index
+        self.image = image
+        self.done = False
+
+        self.colors = ((kek_gomb_img, kek_gomb_action), (piros_gomb_img, piros_gomb_action), (zold_gomb_img, zold_gomb_action))
+        self.symbols = (lud_szimbolum, talp_szimbolum, tojas_szimbolum)
+        self.gomb_data = (r.randint(0,2), r.randint(0,2))
+
+    def gomb_draw(self):
+        if self.pos == (0,0):
+            make = True
+        else:
+            make = False
+
+        modul_draw(self)
+
+        if make:
+            self.gomb = Button(self.pos[0]+100, self.pos[1]+39, self.colors[self.gomb_data[0]][0])
+
+        Image(self.pos[0]+56, self.pos[1]+159, self.symbols[self.gomb_data[1]])
+
+        allapot = self.gomb.button_draw(self.colors[self.gomb_data[0]][1], self.done)
+        if allapot[0]:
+            self.done = allapot[0]
+
+
 #Szöveg
 
 font = pygame.font.Font("Grand9K Pixel.ttf", 36) #õ -> ő
@@ -344,8 +403,23 @@ kabel_3_action = (pygame.image.load("kom_kabel/3_kabel/3_kijelolve.png").convert
 kabel_4_img = pygame.image.load("kom_kabel/4_kabel/4_alap.png").convert_alpha()
 kabel_4_action = (pygame.image.load("kom_kabel/4_kabel/4_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/4_kabel/4_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/4_kabel/4_kesz.png").convert_alpha())
 
+gomb_modul_img = pygame.image.load("gomb_modul/gomb_alap_224x224.png").convert_alpha()
+
+kek_gomb_img = pygame.image.load("gomb_modul/kek/kek_sima.png").convert_alpha()
+kek_gomb_action = (pygame.image.load("gomb_modul/kek/kek_kijelol.png").convert_alpha(), pygame.image.load("gomb_modul/kek/kek_benyomva.png").convert_alpha(), pygame.image.load("gomb_modul/kek/kek_kesz.png").convert_alpha())
+piros_gomb_img = pygame.image.load("gomb_modul/piros/piros_sima.png").convert_alpha()
+piros_gomb_action = (pygame.image.load("gomb_modul/piros/piros_kijelol.png").convert_alpha(), pygame.image.load("gomb_modul/piros/piros_benyomva.png").convert_alpha(), pygame.image.load("gomb_modul/piros/piros_kesz.png").convert_alpha())
+zold_gomb_img = pygame.image.load("gomb_modul/zold/zold_sima.png").convert_alpha()
+zold_gomb_action = (pygame.image.load("gomb_modul/zold/zold_kijelol.png").convert_alpha(), pygame.image.load("gomb_modul/zold/zold_benyomva.png").convert_alpha(), pygame.image.load("gomb_modul/zold/zold_kesz.png").convert_alpha())
+
+lud_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_lud.png").convert_alpha()
+talp_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_talp.png").convert_alpha()
+tojas_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_tojas.png").convert_alpha()
+
+
 jel_alap = pygame.image.load("Jelzok/alap_keret.png").convert_alpha()
 jel_kijel = pygame.image.load("Jelzok/kijelol_keret.png").convert_alpha()
+#jel_kat = pygame.image.load("Jelzok/kat_keret.png").convert_alpha()
 jel_kesz = pygame.image.load("Jelzok/kesz_keret.png").convert_alpha()
 
 jelek = (jel_alap, jel_kijel, jel_kesz)
@@ -355,7 +429,7 @@ explosion_sound = pygame.mixer.Sound("Hangok/explosion.mp3")
 honk_1 = pygame.mixer.Sound("Hangok/honk_1.mp3")
 honk_2 = pygame.mixer.Sound("Hangok/honk_2.mp3")
 honk_3 = pygame.mixer.Sound("Hangok/honk_3.mp3")
-hoking = (honk_1, honk_2, honk_3)
+honking = (honk_1, honk_2, honk_3)
 #honk_1.play()
 
 
@@ -367,19 +441,22 @@ s_d = SimaDrot(None, sima_drot_modul_img)
 k_k = KomplexKabel(None, komplex_kabel_modul_img)
 j = SimaDrot(None, sima_drot_modul_img)
 l = SimaDrot(None, sima_drot_modul_img)
-g = SimaDrot(None, sima_drot_modul_img)
+g = Gomb(None, gomb_modul_img)
+ker = SimaDrot(None, sima_drot_modul_img)
 ido = SimaDrot(None, sima_drot_modul_img)
-modulok = [s_d, k_k, j, l, g, ido]
+modulok = [s_d, k_k, j, l, g, ker, ido]
+not_use_m = [ido]
 
 #a modulok szét szórása
 r_list = []
-for i in range(len(modulok)):
+for i in range(6):
     r_list.append(i)
 
 for i in range(len(modulok)):
-    rand_index = r.randint(0, len(r_list)-1)
-    modulok[i].index = r_list[rand_index]
-    del r_list[rand_index]
+    if modulok[i] not in not_use_m:
+        rand_index = r.randint(0, len(r_list)-1)
+        modulok[i].index = r_list[rand_index]
+        del r_list[rand_index]
 
 modul_kesz = []
 for i in range(6):
@@ -410,6 +487,7 @@ while True:
         Image(141,25, bomba_img)
         s_d.drotok_draw()
         k_k.kabelek_draw()
+        g.gomb_draw()
         visszaszamlalo.timer_draw()
 
         for event in pygame.event.get():
@@ -431,7 +509,7 @@ while True:
 
         osztaly_input.input_draw()
 
-        if start_button.puss_button_draw(start_le)[0]:
+        if start_button.puss_button_draw(start_le):
             if osztaly_input.input_text != "":
                 osztaly_input.puffer = osztaly_input.input_text
                 osztaly_input.input_text = ""
@@ -454,10 +532,10 @@ while True:
     elif menu:
         back = Image(0,0,back_img,screen_x, False, (True, 50))
 
-        if quit_button.puss_button_draw(quit_le)[0]:
+        if quit_button.puss_button_draw(quit_le):
             break
                 
-        if resume_button.puss_button_draw(resume_le)[0]:
+        if resume_button.puss_button_draw(resume_le):
             menu = False
 
             if running:
