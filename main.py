@@ -19,7 +19,7 @@ screen_y = 720
 
 spec_chart = bool(r.randint(0,1))
 szeria_root = f.szerianumber(spec_chart)
-#0 fehér; 1 narancssárga; 2 fekete
+#0 piros; 1 narancssárga; 2 fekete
 matricak = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
 #0-1: balra; 2-3: jobbra
 elemek = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
@@ -246,15 +246,76 @@ class SimaDrot:
         self.drotok = f.generate_drotok()
         self.animate_button = None
 
+        self.drotok_color = []
+
+        for i in range(len(self.drotok)):
+            if self.drotok[i] is not None:
+                self.drotok_color.append(self.drotok[i][0])
+
+        if f.count(self.drotok, [2, False]) >= 2:
+            if szeria_root[1] == 3:
+                self.correct = 3
+
+            elif szeria_root[1] % 2 == 0 and matricak[2]:
+                self.correct = 2
+
+            elif szeria_root[1] % 2 == 1:
+                self.correct = 3
+
+            elif matricak[2]:
+                self.correct = 1
+
+            else:
+                if szeria_root[1]/2 +7 == 8:
+                    self.correct = 0
+                
+                elif szeria_root[1]/2 +7 == 9:
+                    self.correct = 2
+
+                elif szeria_root[1]/2 +7 == 10:
+                    self.correct = 3
+
+                else:
+                    self.correct = 1
+
+        elif self.drotok_color[2] == 0 and elemek[2:4] == [True, True]:
+            self.correct = 0
+
+        elif f.count(self.drotok, [1, False]) == 2 and f.count(self.drotok, [2, False]) == 0:
+            self.correct = 1
+
+        elif f.count(self.drotok, [2, False]) == 1:
+            self.correct = 3
+
+        elif f.count(self.drotok, [0, False]) == 0:
+            if szeria_root[1] == 6:
+                self.correct = 0
+
+            elif elemek[0:2] == [True, True]:
+                self.correct = 1
+
+            else:
+                self.correct = 3
+
+        elif self.drotok_color[0] == 3 and matricak[1]:
+            self.correct = 3
+
+        elif True not in matricak:
+            self.correct = 0
+
+        else:
+            self.correct = 2
+
     def drotok_draw(self):
         modul_draw(self)
+        c = 0
         for i in range(len(self.drotok)):
             if i < 3:
                 half = 0
             else:
                 half = 6
             
-            if self.done and self.drotok[i] is not None:
+            if self.drotok[i] is not None and self.done:
                 if self.drotok[i][1]:
                     if self.animate_button is None:
                         self.animate_button = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0])
@@ -264,8 +325,18 @@ class SimaDrot:
                     Image(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0])
 
             elif self.drotok[i] is not None:
-                self.done = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0]).cable_draw(self.drotok[i][1],self.colors[self.drotok[i][0]][1])
-                self.drotok[i][1] = self.done
+                self.drotok[i][1] = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0]).cable_draw(self.drotok[i][1],self.colors[self.drotok[i][0]][1])
+                if self.drotok[i][1]:
+                    if i - c == self.correct:
+                        self.done = self.drotok[i][1]
+
+                    else:
+                        print("boom")
+                        #csak a teszt miat van a következő sor
+                        self.done = True
+
+            else:
+                c += 1
 
 
 
