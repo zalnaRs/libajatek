@@ -9,6 +9,7 @@ import random as r
 pos_order = [(197, 81), (528, 81), (859, 81),
         (197, 416), (528, 416), (859, 416),
         ]
+changing_colors = [(255, 0, 0), (255, 135, 35), (235, 35, 200)]
 
 screen_x = 1280
 screen_y = 720
@@ -17,8 +18,9 @@ screen_y = 720
 #Változok
 
 spec_chart = bool(r.randint(0,1))
-sz_sz = f.szerianumber(spec_chart)
+szeria_root = f.szerianumber(spec_chart)
 matricak = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
+#0-1: balra; 2-3: jobbra
 elemek = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
 
 
@@ -209,11 +211,15 @@ class Timer:
         self.x = x
         self.y = y
         self.current_seconds = time
+        self.changing_ind = 0
 
-    def timer_draw(self):
+    def timer_draw(self, color:tuple[int, int, int]=(255, 255, 255)):
         display_minutes = self.current_seconds // 60
         display_seconds = self.current_seconds % 60
-        text_draw(f"{display_minutes:02}:{display_seconds:02}", self.x, self.y)
+
+        self.changing_ind = (self.current_seconds // 5)% 3
+
+        text_draw(f"{display_minutes:02}:{display_seconds:02}", self.x, self.y, color)
 
 def change_image(x:int, y:int, images:tuple[pygame.surface.Surface], scale:int=1, close:bool = None):
     pos = pygame.mouse.get_pos()
@@ -335,6 +341,49 @@ class Gomb:
         self.symbols = (lud_szimbolum, talp_szimbolum, tojas_szimbolum)
         self.gomb_data = (r.randint(0,2), r.randint(0,2))
 
+        self.puss = None
+        if self.gomb_data[0] == 0 and f.count(elemek[0:2], True) > 0:
+            self.puss = True
+
+        elif spec_chart and self.gomb_data[0] != 1 and self.gomb_data[1] != 2:
+            self.puss = False
+
+        elif True not in elemek and self.gomb_data[1] != 1:
+            self.puss = False
+
+        elif self.gomb_data[0] == 2:
+            if szeria_root[1] == 9:
+                self.puss = True
+            else:
+                self.puss = False
+
+        if self.puss is None and self.gomb_data[0] == 0:
+            if szeria_root[1] == 1:
+                self.puss = False
+            else:
+                self.puss = True
+
+        if self.puss is None and self.gomb_data[1] == 2:
+            self.puss = False
+
+        elif self.puss is None:
+            self.puss = True
+
+
+        if self.puss:
+            if self.gomb_data[1] == 0:
+                self.time_color = 0
+
+            elif True not in elemek:
+                self.time_color = 1
+
+            else:
+                self.time_color = 2
+
+        else:
+            self.time_limit = None
+
+
     def gomb_draw(self):
         if self.pos == (0,0):
             make = True
@@ -349,8 +398,23 @@ class Gomb:
         Image(self.pos[0]+56, self.pos[1]+159, self.symbols[self.gomb_data[1]])
 
         allapot = self.gomb.button_draw(self.colors[self.gomb_data[0]][1], self.done)
+        if not self.puss and allapot[1]:
+            if self.time_limit is None:
+                self.time_limit = visszaszamlalo.current_seconds - 2
+
+            if self.time_limit >= visszaszamlalo.current_seconds:
+                print("boom")
+
         if allapot[0]:
-            self.done = allapot[0]
+            if self.puss:
+                if self.time_color == visszaszamlalo.changing_ind:
+                    self.done = allapot[0]
+
+                else:
+                    print("boom")
+
+            else:
+                self.done = allapot[0]
 
 
 #Szöveg
@@ -488,7 +552,7 @@ while True:
         s_d.drotok_draw()
         k_k.kabelek_draw()
         g.gomb_draw()
-        visszaszamlalo.timer_draw()
+        visszaszamlalo.timer_draw(changing_colors[visszaszamlalo.changing_ind])
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

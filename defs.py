@@ -115,6 +115,7 @@ def szerianumber(spec:bool) -> str:
         if rand_n not in n_index:
             n_index.append(rand_n)
 
+    digital_root = []
     i = 0
     while len(sz_n) < 8:
         r_num = r.randint(0,9)
@@ -122,6 +123,7 @@ def szerianumber(spec:bool) -> str:
         if i in n_index:
             if i != 0 or r_num != 0:
                 sz_n += numbers[r_num]
+                digital_root.append(int(numbers[r_num]))
                 i += 1
 
         elif count(sz_n, letters[r_num]) < 3:
@@ -140,4 +142,14 @@ def szerianumber(spec:bool) -> str:
                 sz_n += letters[r_num]
                 i += 1
 
-    return sz_n
+    while len(digital_root) > 1:
+        s = 0
+        for e in digital_root:
+            s += e
+
+        digital_root = []
+        s = str(s)
+        for e in s:
+            digital_root.append(int(e))
+
+    return sz_n, digital_root[0]
