@@ -19,6 +19,7 @@ screen_y = 720
 
 spec_chart = bool(r.randint(0,1))
 szeria_root = f.szerianumber(spec_chart)
+#0 fehér; 1 narancssárga; 2 fekete
 matricak = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
 #0-1: balra; 2-3: jobbra
 elemek = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
@@ -279,22 +280,83 @@ class KomplexKabel:
         self.kabelek = []
         for _ in range(6):
             self.kabelek.append([r.randint(0, 3), False])
-        self.cut_it = 3
 
-        self.first = None
-        self.second = None
-        self.third = None
-        self.fourth = None
-        self.fifth = None
-        self.sixth = None
+
+        self.first = 5
+        self.second = 4
+        self.third = 3
+        self.fourth = 2
+        self.fifth = 1
+        self.sixth = 0
         self.num_kabel = [
-        self.first,
-        self.second,
-        self.third,
-        self.fourth,
+        self.sixth,
         self.fifth,
-        self.sixth
+        self.fourth,
+        self.third,
+        self.second,
+        self.first,
         ]
+
+        self.cut_them = []
+        self.feher = None
+
+        #sárga lap
+        if szeria_root[1] == 5:
+            self.cut_them.append(self.second)
+
+        else:
+            if True in elemek:
+                self.feher = 1
+
+            self.cut_them.append(self.sixth)
+
+        #zöld lap
+        if szeria_root[1] == 3 or szeria_root[1] == 9:
+            self.cut_them.append(self.fourth)
+
+        elif szeria_root[1] == 4:
+            self.cut_them.append(self.third)
+
+        elif matricak[2] or szeria_root[1] == 8:
+            self.cut_them.append(self.third)
+
+        else:
+            if True not in elemek:
+                self.feher = 4
+
+            if True not in matricak:
+                self.cut_them.append(self.third)
+
+            else:
+                self.cut_them.append(self.fourth)
+
+        #fehér 4. oldal
+        if self.feher == 1:
+            if szeria_root[1] > 7:
+                self.feher = 4
+
+            elif matricak[0]:
+                self.cut_them.append(self.first)
+
+            elif szeria_root[1] < 5:
+                self.cut_them.append(self.fifth)
+
+            else:
+                self.feher = 4
+
+        if self.feher == 4:
+            if szeria_root[1] < 5:
+                current_root = szeria_root[1] + 5
+
+            else:
+                current_root = szeria_root[1]
+
+            if current_root == 5:
+                self.cut_them.append(self.first)
+
+            elif current_root == 6:
+                self.cut_them.append(self.fifth)
+
 
     def kabelek_draw(self):
         if self.pos == (0,0):
@@ -322,13 +384,28 @@ class KomplexKabel:
 
             else:
                 self.kabelek[i][1] = self.num_kabel[i].cable_draw(self.kabelek[i][1],self.num[self.kabelek[i][0]][1])
-                c = 0
-                for j in range(len(self.kabelek)):
-                    if self.kabelek[j][1]:
-                        c += 1
+                
+                if self.kabelek[i][1]:
+                    if i in self.cut_them:
+                        
+                        c = 0
+                        for j in range(len(self.kabelek)):
+                            if self.kabelek[j][1]:
+                                c += 1
 
-                if c == self.cut_it:
-                    self.done = True
+                        if c == len(self.cut_them):
+                            self.done = True
+
+                    else:
+                        print("boom")
+                        # csak a teszt miat van a következő 7 sor
+                        c = 0
+                        for j in range(len(self.kabelek)):
+                            if self.kabelek[j][1]:
+                                c += 1
+
+                        if c == len(self.cut_them):
+                            self.done = True
 
 class Gomb:
     def __init__(self, index:int, image:pygame.surface.Surface) -> None:
