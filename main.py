@@ -31,6 +31,7 @@ scaling = False
 szintek = [True, False, False, False]
 
 pygame.init()
+#info = pygame.display.Info() (.current_w, .current_h)
 screen = pygame.display.set_mode((screen_x, screen_y))
 screen.fill((88, 88, 88))
 pygame.display.set_caption("Keep Honking and Nobody Explodes")
@@ -179,11 +180,12 @@ class Button:
 
 
 class Input:
-    def __init__(self, x:int, y:int, w:int, h:int, text_size:int):
+    def __init__(self, x: int, y: int, w: int, h: int, text_size: int, enter: bool=False):
         self.rect = pygame.Rect(x, y, w, h)
         self.text_size = text_size
         self.max = w // self.text_size
         self.buffer = ""
+        self.enter = enter
         self.active = False
         self.value = ""
 
@@ -204,12 +206,15 @@ class Input:
                     exit()
 
                 if event.type == pygame.KEYDOWN:
-                    # sortörést nem fogadunk el.
+                    # sortörést nem mindig fogadunk el.
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
-                        self.active = False
+                        if self.enter:
+                            if len(self.buffer) == self.max:
+                                self.value = self.buffer
+                                self.buffer = ""
 
-                    #    self.value = self.buffer
-                    #    self.buffer = ""
+                        else:
+                            self.active = False
 
                     elif event.key == pygame.K_BACKSPACE:
                         self.buffer = self.buffer[0:-1]
@@ -581,7 +586,7 @@ class Gomb:
                 self.done = allapot[0]
 
 
-class Kerdes():
+class Kerdes:
     def __init__(self, index:int, image:pygame.surface.Surface) -> None:
         self.pos = (0,0)
         self.index = index
@@ -661,6 +666,50 @@ class Kerdes():
 
                     else:
                         boom()
+
+
+class Jelszo:
+    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+        self.pos = (0,0)
+        self.index = index
+        self.image = image
+        self.done = False
+
+        self.jelszo = f.password()
+        print(self.jelszo[0])
+
+    def jelszo_modul_draw(self):
+        if self.pos == (0,0):
+            make = True
+        else:
+            make = False
+
+        modul_draw(self)
+
+        if make:
+            self.rect = pygame.Rect(self.pos[0]+71, self.pos[1]+171, 82, 25)
+            self.input = Input(self.rect.x, self.rect.y, 82, 25, 16, True)
+
+        for i in range(len(self.jelszo[1][0])):
+            for j in range(len(self.jelszo[1])):
+                if i == 0 or i == 3:
+                    plus = 0
+                else:
+                    plus = 2
+                text_draw(self.jelszo[1][j][i], self.pos[0]+25+40*j+plus, self.pos[1]+15+34*i, (57, 57, 57), pygame.font.Font(family, 21))
+
+        if self.done:
+            pygame.draw.rect(screen, (57, 35, 0), self.rect)
+            pygame.draw.rect(screen, (31, 19, 0), self.rect, 2)
+        else:
+            self.input.input_draw(5, -1, (57, 35, 0), (255, 255, 255), (31, 19, 0))
+
+        if self.input.value != "":
+            if self.input.value.lower() == self.jelszo[0]:
+                self.done = True
+
+            else:
+                boom()
 
 
 # Betöltés
@@ -767,6 +816,8 @@ progress_2_img = pygame.image.load("kerdesek/allapot/progress_2.png").convert_al
 progress_3_img = pygame.image.load("kerdesek/allapot/progress_3.png").convert_alpha()
 progress_4_img = pygame.image.load("kerdesek/allapot/progress_4.png").convert_alpha()
 
+jelszo_modul_img = pygame.image.load("jelszo/jelszo_modul.png").convert_alpha()
+
 jel_alap = pygame.image.load("Jelzok/alap_keret.png").convert_alpha()
 jel_kijel = pygame.image.load("Jelzok/kijelol_keret.png").convert_alpha()
 # jel_kat = pygame.image.load("Jelzok/kat_keret.png").convert_alpha()
@@ -788,7 +839,7 @@ visszaszamlalo = Timer(10, 25)
 # összes modul hivatkozása
 s_d = SimaDrot(None, sima_drot_modul_img)
 k_k = KomplexKabel(None, komplex_kabel_modul_img)
-j = SimaDrot(None, sima_drot_modul_img)
+j = Jelszo(None, jelszo_modul_img)
 l = SimaDrot(None, sima_drot_modul_img)
 g = Gomb(None, gomb_modul_img)
 ker = Kerdes(None, kerdes_modul_img)
@@ -894,7 +945,11 @@ def end_game():
     menu = False
     end_page = True
 
-    file = open(rf"eredmenyek/{csapat_input.value}.txt", "w")
+    for i in range(len(szintek)):
+        if szintek[i] is True:
+            szint = i + 1
+
+    file = open(rf"eredmenyek/{csapat_input.value}_{szint}.txt", "w")
     # TODO: normális pontozás
     file.write(f"--------------\n{csapat_input.value}\n--------------\nIdő: {visszaszamlalo.current_seconds}\nPontszám: {check_kesz_modulok_szama()}\n--------------")
     file.close()
@@ -911,6 +966,8 @@ while True:
         k_k.kabelek_draw()
         g.gomb_draw()
         ker.kerdes_modul_draw()
+        j.jelszo_modul_draw()
+        
 
         visszaszamlalo.timer_draw(changing_colors[visszaszamlalo.changing_ind])
 
@@ -983,9 +1040,8 @@ while True:
 
 
     elif menu:
-        if not running:
-            Image(0,0,start_back_img)
-        back = Image(0, 0, back_img, screen_x, False, (True, 50))
+        Image(0,0,start_back_img)
+        Image(0, 0, back_img, screen_x, False)
 
         if quit_button.puss_button_draw(quit_le):
             break
@@ -1009,6 +1065,7 @@ while True:
                         game = True
                     else:
                         start_page = True
+
             if event.type == pygame.USEREVENT:
                 visszaszamlalo.current_seconds -= 1
 
@@ -1017,7 +1074,8 @@ while True:
             explosion_sound.play()
             running = False
 
-        back = Image(0, 0, back_img, screen_x, False, (True, 50))
+        Image(0,0,start_back_img)
+        Image(0, 0, back_img, screen_x, False)
         text_draw("Játék vége!", screen_x/2, screen_y/2-200)
         text_draw(f"Idő: {visszaszamlalo.current_seconds}\nPontszám: {check_kesz_modulok_szama()}", screen_x/2, screen_y/2-100)
 

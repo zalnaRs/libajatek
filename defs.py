@@ -79,7 +79,6 @@ def password() -> tuple[str, list[list[str]]]:
                                     for e in p_pair:
                                         if e[0] == letter[i][index]:
                                             p_black_list.append(e[1])
-                                            print(p_black_list)
                                 
                                 matrix[i].append(letter[i][index])
                                 have_it.append(letter[i][index])
