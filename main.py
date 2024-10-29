@@ -1,3 +1,4 @@
+import os
 import random as r
 from sys import exit
 
@@ -25,6 +26,7 @@ elemek = [bool(r.randint(0, 1)), bool(r.randint(0, 1)), bool(r.randint(0, 1)), b
 start_page = True
 menu = False
 game = False
+end_page = False
 running = False
 scaling = False
 
@@ -155,9 +157,9 @@ class Input:
         self.text_y = y - (h // 20) * (h // 20)
         self.text_size = h - (10 + h // 30)
         self.max = w // self.text_size
-        self.input_text = ""
+        self.buffer = ""
         self.active = False
-        self.puffer = ""
+        self.value = ""
 
     def input_draw(self, background=(20, 20, 20), active_color=(255, 255, 255), passive_color=(88, 88, 88),
                    text_color=(255, 255, 255)):
@@ -185,9 +187,9 @@ class Input:
                     #    self.input_text = ""
 
                     elif event.key == pygame.K_BACKSPACE:
-                        self.input_text = self.input_text[0:-1]
-                    elif len(self.input_text) < self.max:
-                        self.input_text += event.unicode
+                        self.buffer = self.buffer[0:-1]
+                    elif len(self.buffer) < self.max:
+                        self.buffer += event.unicode
 
         if self.active:
             color = active_color
@@ -196,10 +198,10 @@ class Input:
 
         pygame.draw.rect(screen, background, self.rect)
         pygame.draw.rect(screen, color, self.rect, 2)
-        text_draw(self.input_text, self.text_x, self.text_y, text_color,
+        text_draw(self.buffer, self.text_x, self.text_y, text_color,
                   pygame.font.Font("Grand9K Pixel.ttf", self.text_size))
 
-        return self.puffer
+        return self.value
 
 
 class Timer:
@@ -332,7 +334,7 @@ class SimaDrot:
                         self.done = self.drotok[i][1]
 
                     else:
-                        print("boom")
+                        boom()
                         # csak a teszt miat van a következő sor
                         self.done = True
 
@@ -459,7 +461,7 @@ class KomplexKabel:
                             self.done = True
 
                     else:
-                        print("boom")
+                        boom()
                         # csak a teszt miat van a következő 7 sor
                         c = 0
                         for j in range(len(self.kabelek)):
@@ -542,7 +544,7 @@ class Gomb:
                 self.time_limit = visszaszamlalo.current_seconds - 2
 
             if self.time_limit >= visszaszamlalo.current_seconds:
-                print("boom")
+                boom()
 
         if allapot[0]:
             if self.puss:
@@ -550,7 +552,7 @@ class Gomb:
                     self.done = allapot[0]
 
                 else:
-                    print("boom")
+                    boom()
 
             else:
                 self.done = allapot[0]
@@ -559,7 +561,6 @@ class Gomb:
 # Szöveg
 
 font = pygame.font.Font("Grand9K Pixel.ttf", 36)  # õ -> ő
-
 
 def text_draw(text, x, y, text_color=(255, 255, 255), style=font):
     img = style.render(text, True, text_color)
@@ -656,7 +657,7 @@ honking = (honk_1, honk_2, honk_3)
 # honk_1.play()
 
 
-osztaly_input = Input(500, 230, 200, 40)
+csapat_input = Input(500, 230, 200, 40)
 visszaszamlalo = Timer(10, 25)
 
 # összes modul hivatkozása
@@ -682,11 +683,14 @@ for i in range(len(modulok)):
         del r_list[rand_index]
 
 modul_kesz = []
-for i in range(6):
+for i in range(len(modulok)-len(not_use_m)):
     modul_kesz.append(None)
 
 
 def modul_draw(self, p_order=None, jel=jelek, m_kesz=None):
+    """
+    kirajzolja a modult, figyelembe veszi hogy kész van-e?
+    """
     if p_order is None:
         p_order = pos_order
     if m_kesz is None:
@@ -698,6 +702,52 @@ def modul_draw(self, p_order=None, jel=jelek, m_kesz=None):
     screen.blit(self.image, self.pos)
     change_image(self.pos[0] + 1, self.pos[1] + 1, jel, 1, self.done)
 
+# megcsinálja az eredmenyek mappát
+try:
+    os.mkdir("eredmenyek")
+except Exception as e:
+   print(f"hiba az eredmenyek mappa létrehozásánál: {e}")
+
+def boom():
+    print("boom")
+    # end_game()
+
+def check_kesz_modulok_szama():
+    """
+    Megnézi, hogy mennyi kész modul van.
+    """
+    j = 0
+    for modul in modul_kesz[:]:
+        if modul:
+            j += 1
+
+    return j
+
+def check_if_game_done():
+    """
+    Ha az összes modul kész van akkor lefutatja a end_game-t.
+    """
+    if check_kesz_modulok_szama() != len(modulok)-len(not_use_m):
+        return False
+
+    end_game()
+    return True
+
+def end_game():
+    """
+    Ha a játék véget ér, akkor ez a függvény fut le.
+    :return: None
+    """
+    global game, running, menu, end_page
+    game = False
+    running = False
+    menu = False
+    end_page = True
+
+    file = open(rf"eredmenyek/{csapat_input.value}.txt", "w")
+    # TODO: normális pontozás
+    file.write(f"--------------\n{csapat_input.value}\n--------------\nIdő: {visszaszamlalo.current_seconds}\nPontszám: {check_kesz_modulok_szama()}\n--------------")
+    file.close()
 
 # Folyamat
 
@@ -706,10 +756,25 @@ while True:
     if game:
         screen.fill((88, 88, 88))
         Image(141, 25, bomba_img)
-        s_d.drotok_draw()
-        k_k.kabelek_draw()
-        g.gomb_draw()
+
+        for modul in modulok[:]:
+            if modul not in not_use_m:
+                try:
+                    modul.drotok_draw()
+                except:
+                    pass
+                try:
+                    modul.kabelek_draw()
+                except:
+                    pass
+                try:
+                    modul.gomb_draw()
+                except:
+                    pass
+
         visszaszamlalo.timer_draw(changing_colors[visszaszamlalo.changing_ind])
+
+        check_if_game_done()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -728,12 +793,12 @@ while True:
     elif start_page:
         Image(0, 0, start_back_img)
 
-        osztaly_input.input_draw()
+        csapat_input.input_draw()
 
         if start_button.puss_button_draw(start_le):
-            if osztaly_input.input_text != "":
-                osztaly_input.puffer = osztaly_input.input_text
-                osztaly_input.input_text = ""
+            if csapat_input.buffer != "":
+                csapat_input.value = csapat_input.buffer
+                csapat_input.buffer = ""
 
             start_page = False
             game = True
@@ -777,6 +842,27 @@ while True:
                         start_page = True
             if event.type == pygame.USEREVENT:
                 visszaszamlalo.current_seconds -= 1
+
+    elif end_page:
+        if running:
+            explosion_sound.play()
+            running = False
+
+        back = Image(0, 0, back_img, screen_x, False, (True, 50))
+        text_draw("Játék vége!", screen_x/2, screen_y/2-200)
+        text_draw(f"Idő: {visszaszamlalo.current_seconds}\nPontszám: {check_kesz_modulok_szama()}", screen_x/2, screen_y/2-100)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+                pygame.quit()
+                exit()
+
+            if event.type == pygame.KEYDOWN:
+                # itt szerintem egy scriptel ujra inditjuk a játékot tehát ez nem kell ide
+                # end_page = False
+                # start_page = True
+                pygame.quit()
+                exit()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
