@@ -1,29 +1,26 @@
-import pygame
-import defs as f
-from sys import exit
 import random as r
+from sys import exit
 
+import pygame
 
-#Állandok
+import defs as f
 
-pos_order = [(197, 81), (528, 81), (859, 81),
-        (197, 416), (528, 416), (859, 416),
-        ]
+# Állandok
+
+pos_order = [(197, 81), (528, 81), (859, 81), (197, 416), (528, 416), (859, 416), ]
 changing_colors = [(255, 0, 0), (255, 135, 35), (235, 35, 200)]
 
 screen_x = 1280
 screen_y = 720
 
+# Változok
 
-#Változok
-
-spec_chart = bool(r.randint(0,1))
+spec_chart = bool(r.randint(0, 1))
 szeria_root = f.szerianumber(spec_chart)
-#0 piros; 1 narancssárga; 2 fekete
-matricak = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
-#0-1: balra; 2-3: jobbra
-elemek = [bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1)), bool(r.randint(0,1))]
-
+# 0 piros; 1 narancssárga; 2 fekete
+matricak = [bool(r.randint(0, 1)), bool(r.randint(0, 1)), bool(r.randint(0, 1))]
+# 0-1: balra; 2-3: jobbra
+elemek = [bool(r.randint(0, 1)), bool(r.randint(0, 1)), bool(r.randint(0, 1)), bool(r.randint(0, 1))]
 
 start_page = True
 menu = False
@@ -31,19 +28,19 @@ game = False
 running = False
 scaling = False
 
-
 pygame.init()
-screen = pygame.display.set_mode((screen_x,screen_y))
-screen.fill((88,88,88))
+screen = pygame.display.set_mode((screen_x, screen_y))
+screen.fill((88, 88, 88))
 pygame.display.set_caption("Keep Honking and Nobody Explodes")
 clock = pygame.time.Clock()
 pygame.time.set_timer(pygame.USEREVENT, 1000)
 
 
-#Osztályok
+# Osztályok
 
 class Image:
-    def __init__(self, x:int, y:int, image:pygame.surface.Surface, scale:int=1, delay:bool=False, trans:tuple[bool, int]=(False, 255)):
+    def __init__(self, x: int, y: int, image: pygame.surface.Surface, scale: int = 1, delay: bool = False,
+                 trans: tuple[bool, int] = (False, 255)):
         width = image.get_width()
         height = image.get_height()
         self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
@@ -58,9 +55,8 @@ class Image:
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
 
-
 class Button:
-    def __init__(self, x:int, y:int, image:pygame.surface.Surface, scale:int=1):
+    def __init__(self, x: int, y: int, image: pygame.surface.Surface, scale: int = 1):
         width = image.get_width()
         height = image.get_height()
         self.scale = scale
@@ -70,16 +66,16 @@ class Button:
         self.click = False
         self.animate = 1
 
-    def puss_button_draw(self, puss_data:tuple[int, int, pygame.surface.Surface, int]):
+    def puss_button_draw(self, puss_data: tuple[int, int, pygame.surface.Surface, int]):
         action = False
 
-        #egér helyzete:
+        # egér helyzete:
         pos = pygame.mouse.get_pos()
         if self.rect.collidepoint(pos) or self.click:
-            if pygame.mouse.get_pressed()[0] == 1: #le van nyomva
+            if pygame.mouse.get_pressed()[0] == 1:  # le van nyomva
                 self.click = True
-                Image(puss_data[0], puss_data[1], puss_data[2], puss_data[3])#mit jelenítsen meg helyete
-                    
+                Image(puss_data[0], puss_data[1], puss_data[2], puss_data[3])  # mit jelenítsen meg helyete
+
 
             elif pygame.mouse.get_pressed()[0] == 0 and self.click:
                 self.click = False
@@ -90,10 +86,10 @@ class Button:
 
         return action
 
-    def cable_draw(self, action:bool, images:tuple[pygame.surface.Surface]):
+    def cable_draw(self, action: bool, images: tuple[pygame.surface.Surface]):
 
         if action:
-            if self.animate < len(images)-1:
+            if self.animate < len(images) - 1:
                 self.animate += 0.1
                 Image(self.rect.x, self.rect.y, images[int(self.animate)], self.scale)
 
@@ -112,8 +108,7 @@ class Button:
 
         return action
 
-
-    def button_draw(self, images:tuple[pygame.surface.Surface], close:bool=None):
+    def button_draw(self, images: tuple[pygame.surface.Surface], close: bool = None):
         action = False
 
         if close is not None and not close:
@@ -123,7 +118,7 @@ class Button:
                 if pygame.mouse.get_pressed()[0] == 1:
                     self.click = True
                     Image(self.rect.x, self.rect.y, images[1], self.scale)
-                        
+
 
                 elif pygame.mouse.get_pressed()[0] == 0 and self.click:
                     Image(self.rect.x, self.rect.y, images[2], self.scale)
@@ -153,19 +148,19 @@ class Button:
         return action
 
 
-
 class Input:
-    def __init__(self, x:int, y:int, w:int, h:int):
+    def __init__(self, x: int, y: int, w: int, h: int):
         self.rect = pygame.Rect(x, y, w, h)
         self.text_x = x + 10
-        self.text_y = y - (h //20)*(h //20)
-        self.text_size = h - (10+h//30)
+        self.text_y = y - (h // 20) * (h // 20)
+        self.text_size = h - (10 + h // 30)
         self.max = w // self.text_size
         self.input_text = ""
         self.active = False
         self.puffer = ""
 
-    def input_draw(self, background=(20,20,20), active_color=(255,255,255), passive_color=(88,88,88), text_color=(255,255,255)):
+    def input_draw(self, background=(20, 20, 20), active_color=(255, 255, 255), passive_color=(88, 88, 88),
+                   text_color=(255, 255, 255)):
 
         pos = pygame.mouse.get_pos()
         if self.rect.collidepoint(pos):
@@ -201,28 +196,29 @@ class Input:
 
         pygame.draw.rect(screen, background, self.rect)
         pygame.draw.rect(screen, color, self.rect, 2)
-        text_draw(self.input_text, self.text_x, self.text_y, text_color, pygame.font.Font("Grand9K Pixel.ttf", self.text_size))
+        text_draw(self.input_text, self.text_x, self.text_y, text_color,
+                  pygame.font.Font("Grand9K Pixel.ttf", self.text_size))
 
         return self.puffer
 
 
-
 class Timer:
-    def __init__(self, x:int, y:int, time:int=300) -> None:
+    def __init__(self, x: int, y: int, time: int = 300) -> None:
         self.x = x
         self.y = y
         self.current_seconds = time
         self.changing_ind = 0
 
-    def timer_draw(self, color:tuple[int, int, int]=(255, 255, 255)):
+    def timer_draw(self, color: tuple[int, int, int] = (255, 255, 255)):
         display_minutes = self.current_seconds // 60
         display_seconds = self.current_seconds % 60
 
-        self.changing_ind = (self.current_seconds // 5)% 3
+        self.changing_ind = (self.current_seconds // 5) % 3
 
         text_draw(f"{display_minutes:02}:{display_seconds:02}", self.x, self.y, color)
 
-def change_image(x:int, y:int, images:tuple[pygame.surface.Surface], scale:int=1, close:bool = None):
+
+def change_image(x: int, y: int, images: tuple[pygame.surface.Surface], scale: int = 1, close: bool = None):
     pos = pygame.mouse.get_pos()
 
     alap = Image(x, y, images[0], scale)
@@ -234,15 +230,16 @@ def change_image(x:int, y:int, images:tuple[pygame.surface.Surface], scale:int=1
         Image(x, y, images[1], scale)
 
 
-
 class SimaDrot:
-    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+    def __init__(self, index: int, image: pygame.surface.Surface) -> None:
         self.pos = None
         self.index = index
         self.image = image
         self.done = False
 
-        self.colors = ((fekete_drot_img, fekete_drot_action), (kek_drot_img, kek_drot_action), (piros_drot_img, piros_drot_action), (sarga_drot_img, sarga_drot_action))
+        self.colors = (
+        (fekete_drot_img, fekete_drot_action), (kek_drot_img, kek_drot_action), (piros_drot_img, piros_drot_action),
+        (sarga_drot_img, sarga_drot_action))
         self.drotok = f.generate_drotok()
         self.animate_button = None
 
@@ -266,13 +263,13 @@ class SimaDrot:
                 self.correct = 1
 
             else:
-                if szeria_root[1]/2 +7 == 8:
+                if szeria_root[1] / 2 + 7 == 8:
                     self.correct = 0
-                
-                elif szeria_root[1]/2 +7 == 9:
+
+                elif szeria_root[1] / 2 + 7 == 9:
                     self.correct = 2
 
-                elif szeria_root[1]/2 +7 == 10:
+                elif szeria_root[1] / 2 + 7 == 10:
                     self.correct = 3
 
                 else:
@@ -314,44 +311,47 @@ class SimaDrot:
                 half = 0
             else:
                 half = 6
-            
+
             if self.drotok[i] is not None and self.done:
                 if self.drotok[i][1]:
                     if self.animate_button is None:
-                        self.animate_button = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0])
-                    self.animate_button.cable_draw(self.drotok[i][1],self.colors[self.drotok[i][0]][1])
+                        self.animate_button = Button(self.pos[0] + 35, self.pos[1] + 34 + 28 * i + half,
+                                                     self.colors[self.drotok[i][0]][0])
+                    self.animate_button.cable_draw(self.drotok[i][1], self.colors[self.drotok[i][0]][1])
 
                 else:
-                    Image(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0])
+                    Image(self.pos[0] + 35, self.pos[1] + 34 + 28 * i + half, self.colors[self.drotok[i][0]][0])
 
             elif self.drotok[i] is not None:
-                self.drotok[i][1] = Button(self.pos[0]+35, self.pos[1]+34+28*i+half, self.colors[self.drotok[i][0]][0]).cable_draw(self.drotok[i][1],self.colors[self.drotok[i][0]][1])
+                self.drotok[i][1] = Button(self.pos[0] + 35, self.pos[1] + 34 + 28 * i + half,
+                                           self.colors[self.drotok[i][0]][0]).cable_draw(self.drotok[i][1],
+                                                                                         self.colors[self.drotok[i][0]][
+                                                                                             1])
                 if self.drotok[i][1]:
                     if i - c == self.correct:
                         self.done = self.drotok[i][1]
 
                     else:
                         print("boom")
-                        #csak a teszt miat van a következő sor
+                        # csak a teszt miat van a következő sor
                         self.done = True
 
             else:
                 c += 1
 
 
-
 class KomplexKabel:
-    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+    def __init__(self, index: int, image: pygame.surface.Surface) -> None:
         self.index = index
-        self.pos = (0,0)
+        self.pos = (0, 0)
         self.image = image
         self.done = False
 
-        self.num = ((kabel_1_img, kabel_1_action),(kabel_2_img, kabel_2_action), (kabel_3_img, kabel_3_action), (kabel_4_img, kabel_4_action))
+        self.num = ((kabel_1_img, kabel_1_action), (kabel_2_img, kabel_2_action), (kabel_3_img, kabel_3_action),
+                    (kabel_4_img, kabel_4_action))
         self.kabelek = []
         for _ in range(6):
             self.kabelek.append([r.randint(0, 3), False])
-
 
         self.first = 5
         self.second = 4
@@ -359,19 +359,12 @@ class KomplexKabel:
         self.fourth = 2
         self.fifth = 1
         self.sixth = 0
-        self.num_kabel = [
-        self.sixth,
-        self.fifth,
-        self.fourth,
-        self.third,
-        self.second,
-        self.first,
-        ]
+        self.num_kabel = [self.sixth, self.fifth, self.fourth, self.third, self.second, self.first, ]
 
         self.cut_them = []
         self.feher = None
 
-        #sárga lap
+        # sárga lap
         if szeria_root[1] == 5:
             self.cut_them.append(self.second)
 
@@ -381,7 +374,7 @@ class KomplexKabel:
 
             self.cut_them.append(self.sixth)
 
-        #zöld lap
+        # zöld lap
         if szeria_root[1] == 3 or szeria_root[1] == 9:
             self.cut_them.append(self.fourth)
 
@@ -401,7 +394,7 @@ class KomplexKabel:
             else:
                 self.cut_them.append(self.fourth)
 
-        #fehér 4. oldal
+        # fehér 4. oldal
         if self.feher == 1:
             if szeria_root[1] > 7:
                 self.feher = 4
@@ -428,9 +421,8 @@ class KomplexKabel:
             elif current_root == 6:
                 self.cut_them.append(self.fifth)
 
-
     def kabelek_draw(self):
-        if self.pos == (0,0):
+        if self.pos == (0, 0):
             make = True
         else:
             make = False
@@ -439,8 +431,7 @@ class KomplexKabel:
 
         if make:
             for i in range(len(self.kabelek)):
-                self.num_kabel[i] = Button(self.pos[0]+22+28*i, self.pos[1]+23, self.num[self.kabelek[i][0]][0])
-
+                self.num_kabel[i] = Button(self.pos[0] + 22 + 28 * i, self.pos[1] + 23, self.num[self.kabelek[i][0]][0])
 
         for i in range(len(self.kabelek)):
             if self.done:
@@ -448,17 +439,17 @@ class KomplexKabel:
 
                     for j in range(len(self.kabelek)):
                         if self.kabelek[j][1]:
-                            self.num_kabel[i].cable_draw(self.kabelek[i][1],self.num[self.kabelek[i][0]][1])
+                            self.num_kabel[i].cable_draw(self.kabelek[i][1], self.num[self.kabelek[i][0]][1])
 
                 else:
-                    Image(self.pos[0]+22+28*i, self.pos[1]+23, self.num[self.kabelek[i][0]][0])
+                    Image(self.pos[0] + 22 + 28 * i, self.pos[1] + 23, self.num[self.kabelek[i][0]][0])
 
             else:
-                self.kabelek[i][1] = self.num_kabel[i].cable_draw(self.kabelek[i][1],self.num[self.kabelek[i][0]][1])
-                
+                self.kabelek[i][1] = self.num_kabel[i].cable_draw(self.kabelek[i][1], self.num[self.kabelek[i][0]][1])
+
                 if self.kabelek[i][1]:
                     if i in self.cut_them:
-                        
+
                         c = 0
                         for j in range(len(self.kabelek)):
                             if self.kabelek[j][1]:
@@ -478,16 +469,18 @@ class KomplexKabel:
                         if c == len(self.cut_them):
                             self.done = True
 
+
 class Gomb:
-    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
-        self.pos = (0,0)
+    def __init__(self, index: int, image: pygame.surface.Surface) -> None:
+        self.pos = (0, 0)
         self.index = index
         self.image = image
         self.done = False
 
-        self.colors = ((kek_gomb_img, kek_gomb_action), (piros_gomb_img, piros_gomb_action), (zold_gomb_img, zold_gomb_action))
+        self.colors = (
+        (kek_gomb_img, kek_gomb_action), (piros_gomb_img, piros_gomb_action), (zold_gomb_img, zold_gomb_action))
         self.symbols = (lud_szimbolum, talp_szimbolum, tojas_szimbolum)
-        self.gomb_data = (r.randint(0,2), r.randint(0,2))
+        self.gomb_data = (r.randint(0, 2), r.randint(0, 2))
 
         self.puss = None
         if self.gomb_data[0] == 0 and f.count(elemek[0:2], True) > 0:
@@ -517,7 +510,6 @@ class Gomb:
         elif self.puss is None:
             self.puss = True
 
-
         if self.puss:
             if self.gomb_data[1] == 0:
                 self.time_color = 0
@@ -531,9 +523,8 @@ class Gomb:
         else:
             self.time_limit = None
 
-
     def gomb_draw(self):
-        if self.pos == (0,0):
+        if self.pos == (0, 0):
             make = True
         else:
             make = False
@@ -541,9 +532,9 @@ class Gomb:
         modul_draw(self)
 
         if make:
-            self.gomb = Button(self.pos[0]+100, self.pos[1]+39, self.colors[self.gomb_data[0]][0])
+            self.gomb = Button(self.pos[0] + 100, self.pos[1] + 39, self.colors[self.gomb_data[0]][0])
 
-        Image(self.pos[0]+56, self.pos[1]+159, self.symbols[self.gomb_data[1]])
+        Image(self.pos[0] + 56, self.pos[1] + 159, self.symbols[self.gomb_data[1]])
 
         allapot = self.gomb.button_draw(self.colors[self.gomb_data[0]][1], self.done)
         if not self.puss and allapot[1]:
@@ -565,90 +556,110 @@ class Gomb:
                 self.done = allapot[0]
 
 
-#Szöveg
+# Szöveg
 
-font = pygame.font.Font("Grand9K Pixel.ttf", 36) #õ -> ő
+font = pygame.font.Font("Grand9K Pixel.ttf", 36)  # õ -> ő
 
-def text_draw(text, x, y, text_color=(255,255,255), style=font):
+
+def text_draw(text, x, y, text_color=(255, 255, 255), style=font):
     img = style.render(text, True, text_color)
-    screen.blit(img,(x,y))
+    screen.blit(img, (x, y))
 
-#Betöltés
+
+# Betöltés
 
 back_img = pygame.image.load("Backs/background.png").convert_alpha()
 start_back_img = pygame.image.load("Backs/start.png").convert_alpha()
 
-
 resume_img = pygame.image.load("Buttons/resume_button.png").convert_alpha()
-resume_le = (430,250,pygame.image.load("Buttons/resume_button_le.png").convert_alpha(),10)
+resume_le = (430, 250, pygame.image.load("Buttons/resume_button_le.png").convert_alpha(), 10)
 quit_img = pygame.image.load("Buttons/quit_button.png").convert_alpha()
-quit_le = (520,400,pygame.image.load("Buttons/quit_button_le.png").convert_alpha(),10)
+quit_le = (520, 400, pygame.image.load("Buttons/quit_button_le.png").convert_alpha(), 10)
 start_img = pygame.image.load("Buttons/start_button.png").convert_alpha()
-start_le = (489,310,pygame.image.load("Buttons/start_button_le.png").convert_alpha(),10)
+start_le = (489, 310, pygame.image.load("Buttons/start_button_le.png").convert_alpha(), 10)
 
-resume_button = Button(420,240, resume_img, 10)
-quit_button = Button(510,390, quit_img, 10)
-start_button = Button(479,300, start_img, 10)
-
+resume_button = Button(420, 240, resume_img, 10)
+quit_button = Button(510, 390, quit_img, 10)
+start_button = Button(479, 300, start_img, 10)
 
 bomba_img = pygame.image.load("Backs/bomba_alap.png").convert_alpha()
 
 sima_drot_modul_img = pygame.image.load("nat_drotok/drot_nat_224x224.png").convert_alpha()
 
 fekete_drot_img = pygame.image.load("nat_drotok/fekete/fekete_alap.png").convert_alpha()
-fekete_drot_action = (pygame.image.load("nat_drotok/fekete/fekete_kijelolve.png").convert_alpha(), pygame.image.load("nat_drotok/fekete/fekete_vagas.png").convert_alpha(), pygame.image.load("nat_drotok/fekete/fekete_kesz.png").convert_alpha())
+fekete_drot_action = (pygame.image.load("nat_drotok/fekete/fekete_kijelolve.png").convert_alpha(),
+                      pygame.image.load("nat_drotok/fekete/fekete_vagas.png").convert_alpha(),
+                      pygame.image.load("nat_drotok/fekete/fekete_kesz.png").convert_alpha())
 kek_drot_img = pygame.image.load("nat_drotok/kek/kek_alap.png").convert_alpha()
-kek_drot_action = (pygame.image.load("nat_drotok/kek/kek_kijelolve.png").convert_alpha(), pygame.image.load("nat_drotok/kek/kek_vagas.png").convert_alpha(), pygame.image.load("nat_drotok/kek/kek_kesz.png").convert_alpha())
+kek_drot_action = (pygame.image.load("nat_drotok/kek/kek_kijelolve.png").convert_alpha(),
+                   pygame.image.load("nat_drotok/kek/kek_vagas.png").convert_alpha(),
+                   pygame.image.load("nat_drotok/kek/kek_kesz.png").convert_alpha())
 piros_drot_img = pygame.image.load("nat_drotok/piros/piros_alap.png").convert_alpha()
-piros_drot_action = (pygame.image.load("nat_drotok/piros/piros_kijelolve.png").convert_alpha(), pygame.image.load("nat_drotok/piros/piros_vagas.png").convert_alpha(), pygame.image.load("nat_drotok/piros/piros_kesz.png").convert_alpha())
+piros_drot_action = (pygame.image.load("nat_drotok/piros/piros_kijelolve.png").convert_alpha(),
+                     pygame.image.load("nat_drotok/piros/piros_vagas.png").convert_alpha(),
+                     pygame.image.load("nat_drotok/piros/piros_kesz.png").convert_alpha())
 sarga_drot_img = pygame.image.load("nat_drotok/sarga/sarga_alap.png").convert_alpha()
-sarga_drot_action = (pygame.image.load("nat_drotok/sarga/sarga_kijelolve.png").convert_alpha(), pygame.image.load("nat_drotok/sarga/sarga_vagas.png").convert_alpha(), pygame.image.load("nat_drotok/sarga/sarga_kesz.png").convert_alpha())
+sarga_drot_action = (pygame.image.load("nat_drotok/sarga/sarga_kijelolve.png").convert_alpha(),
+                     pygame.image.load("nat_drotok/sarga/sarga_vagas.png").convert_alpha(),
+                     pygame.image.load("nat_drotok/sarga/sarga_kesz.png").convert_alpha())
 
 komplex_kabel_modul_img = pygame.image.load("kom_kabel/kabel_kom_224x224.png").convert_alpha()
 
 kabel_1_img = pygame.image.load("kom_kabel/1_kabel/1_alap.png").convert_alpha()
-kabel_1_action = (pygame.image.load("kom_kabel/1_kabel/1_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/1_kabel/1_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/1_kabel/1_kesz.png").convert_alpha())
+kabel_1_action = (pygame.image.load("kom_kabel/1_kabel/1_kijelolve.png").convert_alpha(),
+                  pygame.image.load("kom_kabel/1_kabel/1_vagas.png").convert_alpha(),
+                  pygame.image.load("kom_kabel/1_kabel/1_kesz.png").convert_alpha())
 kabel_2_img = pygame.image.load("kom_kabel/2_kabel/2_alap.png").convert_alpha()
-kabel_2_action = (pygame.image.load("kom_kabel/2_kabel/2_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/2_kabel/2_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/2_kabel/2_kesz.png").convert_alpha())
+kabel_2_action = (pygame.image.load("kom_kabel/2_kabel/2_kijelolve.png").convert_alpha(),
+                  pygame.image.load("kom_kabel/2_kabel/2_vagas.png").convert_alpha(),
+                  pygame.image.load("kom_kabel/2_kabel/2_kesz.png").convert_alpha())
 kabel_3_img = pygame.image.load("kom_kabel/3_kabel/3_alap.png").convert_alpha()
-kabel_3_action = (pygame.image.load("kom_kabel/3_kabel/3_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/3_kabel/3_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/3_kabel/3_kesz.png").convert_alpha())
+kabel_3_action = (pygame.image.load("kom_kabel/3_kabel/3_kijelolve.png").convert_alpha(),
+                  pygame.image.load("kom_kabel/3_kabel/3_vagas.png").convert_alpha(),
+                  pygame.image.load("kom_kabel/3_kabel/3_kesz.png").convert_alpha())
 kabel_4_img = pygame.image.load("kom_kabel/4_kabel/4_alap.png").convert_alpha()
-kabel_4_action = (pygame.image.load("kom_kabel/4_kabel/4_kijelolve.png").convert_alpha(), pygame.image.load("kom_kabel/4_kabel/4_vagas.png").convert_alpha(), pygame.image.load("kom_kabel/4_kabel/4_kesz.png").convert_alpha())
+kabel_4_action = (pygame.image.load("kom_kabel/4_kabel/4_kijelolve.png").convert_alpha(),
+                  pygame.image.load("kom_kabel/4_kabel/4_vagas.png").convert_alpha(),
+                  pygame.image.load("kom_kabel/4_kabel/4_kesz.png").convert_alpha())
 
 gomb_modul_img = pygame.image.load("gomb_modul/gomb_alap_224x224.png").convert_alpha()
 
 kek_gomb_img = pygame.image.load("gomb_modul/kek/kek_sima.png").convert_alpha()
-kek_gomb_action = (pygame.image.load("gomb_modul/kek/kek_kijelol.png").convert_alpha(), pygame.image.load("gomb_modul/kek/kek_benyomva.png").convert_alpha(), pygame.image.load("gomb_modul/kek/kek_kesz.png").convert_alpha())
+kek_gomb_action = (pygame.image.load("gomb_modul/kek/kek_kijelol.png").convert_alpha(),
+                   pygame.image.load("gomb_modul/kek/kek_benyomva.png").convert_alpha(),
+                   pygame.image.load("gomb_modul/kek/kek_kesz.png").convert_alpha())
 piros_gomb_img = pygame.image.load("gomb_modul/piros/piros_sima.png").convert_alpha()
-piros_gomb_action = (pygame.image.load("gomb_modul/piros/piros_kijelol.png").convert_alpha(), pygame.image.load("gomb_modul/piros/piros_benyomva.png").convert_alpha(), pygame.image.load("gomb_modul/piros/piros_kesz.png").convert_alpha())
+piros_gomb_action = (pygame.image.load("gomb_modul/piros/piros_kijelol.png").convert_alpha(),
+                     pygame.image.load("gomb_modul/piros/piros_benyomva.png").convert_alpha(),
+                     pygame.image.load("gomb_modul/piros/piros_kesz.png").convert_alpha())
 zold_gomb_img = pygame.image.load("gomb_modul/zold/zold_sima.png").convert_alpha()
-zold_gomb_action = (pygame.image.load("gomb_modul/zold/zold_kijelol.png").convert_alpha(), pygame.image.load("gomb_modul/zold/zold_benyomva.png").convert_alpha(), pygame.image.load("gomb_modul/zold/zold_kesz.png").convert_alpha())
+zold_gomb_action = (pygame.image.load("gomb_modul/zold/zold_kijelol.png").convert_alpha(),
+                    pygame.image.load("gomb_modul/zold/zold_benyomva.png").convert_alpha(),
+                    pygame.image.load("gomb_modul/zold/zold_kesz.png").convert_alpha())
 
 lud_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_lud.png").convert_alpha()
 talp_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_talp.png").convert_alpha()
 tojas_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_tojas.png").convert_alpha()
 
-
 jel_alap = pygame.image.load("Jelzok/alap_keret.png").convert_alpha()
 jel_kijel = pygame.image.load("Jelzok/kijelol_keret.png").convert_alpha()
-#jel_kat = pygame.image.load("Jelzok/kat_keret.png").convert_alpha()
+# jel_kat = pygame.image.load("Jelzok/kat_keret.png").convert_alpha()
 jel_kesz = pygame.image.load("Jelzok/kesz_keret.png").convert_alpha()
 
 jelek = (jel_alap, jel_kijel, jel_kesz)
-
 
 explosion_sound = pygame.mixer.Sound("Hangok/explosion.mp3")
 honk_1 = pygame.mixer.Sound("Hangok/honk_1.mp3")
 honk_2 = pygame.mixer.Sound("Hangok/honk_2.mp3")
 honk_3 = pygame.mixer.Sound("Hangok/honk_3.mp3")
 honking = (honk_1, honk_2, honk_3)
-#honk_1.play()
+# honk_1.play()
 
 
 osztaly_input = Input(500, 230, 200, 40)
 visszaszamlalo = Timer(10, 25)
 
-#összes modul hivatkozása
+# összes modul hivatkozása
 s_d = SimaDrot(None, sima_drot_modul_img)
 k_k = KomplexKabel(None, komplex_kabel_modul_img)
 j = SimaDrot(None, sima_drot_modul_img)
@@ -659,14 +670,14 @@ ido = SimaDrot(None, sima_drot_modul_img)
 modulok = [s_d, k_k, j, l, g, ker, ido]
 not_use_m = [ido]
 
-#a modulok szét szórása
+# a modulok szét szórása
 r_list = []
 for i in range(6):
     r_list.append(i)
 
 for i in range(len(modulok)):
     if modulok[i] not in not_use_m:
-        rand_index = r.randint(0, len(r_list)-1)
+        rand_index = r.randint(0, len(r_list) - 1)
         modulok[i].index = r_list[rand_index]
         del r_list[rand_index]
 
@@ -675,8 +686,7 @@ for i in range(6):
     modul_kesz.append(None)
 
 
-
-def modul_draw(self, p_order=None, jel = jelek, m_kesz=None):
+def modul_draw(self, p_order=None, jel=jelek, m_kesz=None):
     if p_order is None:
         p_order = pos_order
     if m_kesz is None:
@@ -686,17 +696,16 @@ def modul_draw(self, p_order=None, jel = jelek, m_kesz=None):
         self.pos = p_order[self.index]
 
     screen.blit(self.image, self.pos)
-    change_image(self.pos[0]+1, self.pos[1]+1, jel, 1, self.done)
+    change_image(self.pos[0] + 1, self.pos[1] + 1, jel, 1, self.done)
 
 
-
-#Folyamat
+# Folyamat
 
 while True:
 
     if game:
-        screen.fill((88,88,88))
-        Image(141,25, bomba_img)
+        screen.fill((88, 88, 88))
+        Image(141, 25, bomba_img)
         s_d.drotok_draw()
         k_k.kabelek_draw()
         g.gomb_draw()
@@ -706,7 +715,7 @@ while True:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-            
+
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     game = False
@@ -717,7 +726,7 @@ while True:
 
 
     elif start_page:
-        Image(0,0,start_back_img)
+        Image(0, 0, start_back_img)
 
         osztaly_input.input_draw()
 
@@ -742,11 +751,11 @@ while True:
 
 
     elif menu:
-        back = Image(0,0,back_img,screen_x, False, (True, 50))
+        back = Image(0, 0, back_img, screen_x, False, (True, 50))
 
         if quit_button.puss_button_draw(quit_le):
             break
-                
+
         if resume_button.puss_button_draw(resume_le):
             menu = False
 
