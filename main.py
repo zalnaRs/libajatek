@@ -1,9 +1,7 @@
 import os
 import random as r
 from sys import exit
-
 import pygame
-
 import defs as f
 
 # Állandok
@@ -26,9 +24,11 @@ elemek = [bool(r.randint(0, 1)), bool(r.randint(0, 1)), bool(r.randint(0, 1)), b
 start_page = True
 menu = False
 game = False
+hiba = False
 end_page = False
 running = False
 scaling = False
+szintek = [True, False, False, False]
 
 pygame.init()
 screen = pygame.display.set_mode((screen_x, screen_y))
@@ -41,8 +41,7 @@ pygame.time.set_timer(pygame.USEREVENT, 1000)
 # Osztályok
 
 class Image:
-    def __init__(self, x: int, y: int, image: pygame.surface.Surface, scale: int = 1, delay: bool = False,
-                 trans: tuple[bool, int] = (False, 255)):
+    def __init__(self, x: int, y: int, image: pygame.surface.Surface, scale: int = 1, delay: bool = False, trans: tuple[bool, int] = (False, 255)):
         width = image.get_width()
         height = image.get_height()
         self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
@@ -68,23 +67,34 @@ class Button:
         self.click = False
         self.animate = 1
 
-    def puss_button_draw(self, puss_data: tuple[int, int, pygame.surface.Surface, int]):
+    def puss_button_draw(self, puss_data:tuple[int, int, pygame.surface.Surface, int], close:bool=None):
         action = False
 
-        # egér helyzete:
-        pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos) or self.click:
-            if pygame.mouse.get_pressed()[0] == 1:  # le van nyomva
-                self.click = True
-                Image(puss_data[0], puss_data[1], puss_data[2], puss_data[3])  # mit jelenítsen meg helyete
+        #egér helyzete:
+        if close is not None and close:
+            Image(puss_data[0], puss_data[1], puss_data[2], puss_data[3])
 
+        else:
+            pos = pygame.mouse.get_pos()
+            if self.rect.collidepoint(pos) or self.click:
+                if pygame.mouse.get_pressed()[0] == 1: #le van nyomva
+                    self.click = True
+                    Image(puss_data[0], puss_data[1], puss_data[2], puss_data[3])#mit jelenítsen meg helyete
+                        
 
-            elif pygame.mouse.get_pressed()[0] == 0 and self.click:
+                elif pygame.mouse.get_pressed()[0] == 0 and self.click:
+                    self.click = False
+                    action = True
+                    if close is not None:
+                        close = True
+                        self.click = True
+
+            if not self.click:
+                screen.blit(self.image, (self.rect.x, self.rect.y))
+            
+            if close is not None and close:
+                Image(puss_data[0], puss_data[1], puss_data[2], puss_data[3])
                 self.click = False
-                action = True
-
-        if not self.click:
-            screen.blit(self.image, (self.rect.x, self.rect.y))
 
         return action
 
@@ -110,20 +120,41 @@ class Button:
 
         return action
 
-    def button_draw(self, images: tuple[pygame.surface.Surface], close: bool = None):
+    def button_draw(self, images:tuple[pygame.surface.Surface], close:bool=None):
         action = False
 
-        if close is not None and not close:
+        if close is not None:
+            if not close:
 
+                pos = pygame.mouse.get_pos()
+                if self.rect.collidepoint(pos) or self.click:
+                    if pygame.mouse.get_pressed()[0] == 1:
+                        self.click = True
+                        Image(self.rect.x, self.rect.y, images[1], self.scale)
+                            
+
+                    elif pygame.mouse.get_pressed()[0] == 0 and self.click:
+                        Image(self.rect.x, self.rect.y, images[2], self.scale)
+                        self.click = False
+                        action = True
+
+                    elif not self.click:
+                        Image(self.rect.x, self.rect.y, images[0], self.scale)
+
+                elif not self.click:
+                    screen.blit(self.image, (self.rect.x, self.rect.y))
+
+            else:
+                Image(self.rect.x, self.rect.y, images[2], self.scale)
+
+        else:
             pos = pygame.mouse.get_pos()
             if self.rect.collidepoint(pos) or self.click:
                 if pygame.mouse.get_pressed()[0] == 1:
                     self.click = True
                     Image(self.rect.x, self.rect.y, images[1], self.scale)
 
-
                 elif pygame.mouse.get_pressed()[0] == 0 and self.click:
-                    Image(self.rect.x, self.rect.y, images[2], self.scale)
                     self.click = False
                     action = True
 
@@ -132,9 +163,6 @@ class Button:
 
             elif not self.click:
                 screen.blit(self.image, (self.rect.x, self.rect.y))
-
-        else:
-            Image(self.rect.x, self.rect.y, images[2], self.scale)
 
         return action, self.click
 
@@ -151,18 +179,15 @@ class Button:
 
 
 class Input:
-    def __init__(self, x: int, y: int, w: int, h: int):
+    def __init__(self, x:int, y:int, w:int, h:int, text_size:int):
         self.rect = pygame.Rect(x, y, w, h)
-        self.text_x = x + 10
-        self.text_y = y - (h // 20) * (h // 20)
-        self.text_size = h - (10 + h // 30)
+        self.text_size = text_size
         self.max = w // self.text_size
         self.buffer = ""
         self.active = False
         self.value = ""
 
-    def input_draw(self, background=(20, 20, 20), active_color=(255, 255, 255), passive_color=(88, 88, 88),
-                   text_color=(255, 255, 255)):
+    def input_draw(self, plus_x:int = 5, plus_y:int = 5, background=(20,20,20), active_color=(255,255,255), passive_color=(88,88,88), text_color=(255,255,255)):
 
         pos = pygame.mouse.get_pos()
         if self.rect.collidepoint(pos):
@@ -183,13 +208,16 @@ class Input:
                     if event.key == pygame.K_ESCAPE or event.key == pygame.K_RETURN:
                         self.active = False
 
-                    #    self.puffer = self.input_text
-                    #    self.input_text = ""
+                    #    self.value = self.buffer
+                    #    self.buffer = ""
 
                     elif event.key == pygame.K_BACKSPACE:
                         self.buffer = self.buffer[0:-1]
                     elif len(self.buffer) < self.max:
                         self.buffer += event.unicode
+
+                if running and event.type == pygame.USEREVENT:
+                    visszaszamlalo.current_seconds -= 1
 
         if self.active:
             color = active_color
@@ -198,8 +226,7 @@ class Input:
 
         pygame.draw.rect(screen, background, self.rect)
         pygame.draw.rect(screen, color, self.rect, 2)
-        text_draw(self.buffer, self.text_x, self.text_y, text_color,
-                  pygame.font.Font("Grand9K Pixel.ttf", self.text_size))
+        text_draw(self.buffer, self.rect.x + plus_x, self.rect.y + plus_y, text_color, pygame.font.Font("Grand9K Pixel.ttf", self.text_size))
 
         return self.value
 
@@ -317,18 +344,14 @@ class SimaDrot:
             if self.drotok[i] is not None and self.done:
                 if self.drotok[i][1]:
                     if self.animate_button is None:
-                        self.animate_button = Button(self.pos[0] + 35, self.pos[1] + 34 + 28 * i + half,
-                                                     self.colors[self.drotok[i][0]][0])
+                        self.animate_button = Button(self.pos[0] + 35, self.pos[1] + 34 + 28 * i + half, self.colors[self.drotok[i][0]][0])
                     self.animate_button.cable_draw(self.drotok[i][1], self.colors[self.drotok[i][0]][1])
 
                 else:
                     Image(self.pos[0] + 35, self.pos[1] + 34 + 28 * i + half, self.colors[self.drotok[i][0]][0])
 
             elif self.drotok[i] is not None:
-                self.drotok[i][1] = Button(self.pos[0] + 35, self.pos[1] + 34 + 28 * i + half,
-                                           self.colors[self.drotok[i][0]][0]).cable_draw(self.drotok[i][1],
-                                                                                         self.colors[self.drotok[i][0]][
-                                                                                             1])
+                self.drotok[i][1] = Button(self.pos[0] + 35, self.pos[1] + 34 + 28 * i + half, self.colors[self.drotok[i][0]][0]).cable_draw(self.drotok[i][1], self.colors[self.drotok[i][0]][1])
                 if self.drotok[i][1]:
                     if i - c == self.correct:
                         self.done = self.drotok[i][1]
@@ -558,13 +581,86 @@ class Gomb:
                 self.done = allapot[0]
 
 
-# Szöveg
+class Kerdes():
+    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+        self.pos = (0,0)
+        self.index = index
+        self.image = image
+        self.done = False
 
-font = pygame.font.Font("Grand9K Pixel.ttf", 36)  # õ -> ő
+        self.betuk = ((a_gomb_img, a_gomb_action), (b_gomb_img, b_gomb_action), (c_gomb_img, c_gomb_action), (d_gomb_img, d_gomb_action))
+        self.progress = (progress_0_img, progress_1_img, progress_2_img, progress_3_img, progress_4_img)
+        self.kerdesek = (("Melyik szín, jelenik meg gyakran Szent Mártont ábrázoló képeken?",10),
+                        ("Melyik a helyes válasz? ",18),
+                        ("Melyik országnak szolgált katonaként Szent Márton?",13),
+                        ("Milyen zöldséget szoktak libasülthöz adni?",13),
+                        ("Mi Szent Márton egyik legismertebb tulajdonsága?",13),
+                        ("Szent Mártont minek a védõszentje?",13),
+                        ("Melyik jelkép kapcsolódik Márton-naphoz a termények közül? ",10),
+                        ("Mit adott Szent Márton a koldusnak?",13),
+                        ("Melyik Szent Márton szülõvárosa?",13),
+                        ("Mi készül hagyományosan libából Márton-napon?",13)
+                        )
+        #0: A; 1: B; 2: C; 3: D
+        self.valaszok = (0, 3, 2, 0, 3, 1, 3, 2, 1, 2)
+        self.current_kerdesek = []
+        while len(self.current_kerdesek) < 4:
+            rand_num = r.randint(0, len(self.kerdesek)-1)
+            if rand_num not in self.current_kerdesek:
+                self.current_kerdesek.append(rand_num)
+        self.current_kerdes = 0
 
-def text_draw(text, x, y, text_color=(255, 255, 255), style=font):
-    img = style.render(text, True, text_color)
-    screen.blit(img, (x, y))
+        a_gomb = None
+        b_gomb = None
+        c_gomb = None
+        d_gomb = None
+        self.gombok = [a_gomb, b_gomb, c_gomb, d_gomb]
+
+    def kerdes_modul_draw(self):
+        if self.pos == (0,0):
+            make = True
+        else:
+            make = False
+
+        modul_draw(self)
+
+        if make:
+            for i in range(len(self.gombok)):
+                if i > 1:
+                    half = 5
+
+                else:
+                    half = 0
+
+                self.gombok[i] = Button(self.pos[0]+23+48*i+half, self.pos[1]+139, self.betuk[i][0])
+
+        if self.done:
+            for i in range(len(self.gombok)):
+                if i > 1:
+                    half = 5
+
+                else:
+                    half = 0
+                
+                Image(self.pos[0]+23+48*i+half, self.pos[1]+139, self.betuk[i][0])
+
+            Image(self.pos[0]+22, self.pos[1]+198, self.progress[-1])
+            text_draw("( =", self.pos[0]+78, self.pos[1]+32, (255,255,255), pygame.font.Font(family, 36))
+
+        else:
+            display_text(self.kerdesek[self.current_kerdesek[self.current_kerdes]][0], (self.pos[0]+37, self.pos[1]+32), self.pos[0]+190, pygame.font.Font(family, self.kerdesek[self.current_kerdesek[self.current_kerdes]][1]))
+            Image(self.pos[0]+22, self.pos[1]+198, self.progress[self.current_kerdes])
+            for i in range(len(self.gombok)):
+                if self.gombok[i].button_draw(self.betuk[i][1])[0]:
+                    if i == self.valaszok[self.current_kerdesek[self.current_kerdes]]:
+                        if self.current_kerdes == 3:
+                            self.done = True
+
+                        else:
+                            self.current_kerdes += 1
+
+                    else:
+                        boom()
 
 
 # Betöltés
@@ -578,10 +674,22 @@ quit_img = pygame.image.load("Buttons/quit_button.png").convert_alpha()
 quit_le = (520, 400, pygame.image.load("Buttons/quit_button_le.png").convert_alpha(), 10)
 start_img = pygame.image.load("Buttons/start_button.png").convert_alpha()
 start_le = (489, 310, pygame.image.load("Buttons/start_button_le.png").convert_alpha(), 10)
+sz1_img = pygame.image.load("Buttons/1_button.png").convert_alpha()
+sz1_le = (167,85, pygame.image.load("Buttons/1_button_le.png").convert_alpha(), 5)
+sz2_img = pygame.image.load("Buttons/2_button.png").convert_alpha()
+sz2_le = (165,245, pygame.image.load("Buttons/2_button_le.png").convert_alpha(), 5)
+sz3_img = pygame.image.load("Buttons/3_button.png").convert_alpha()
+sz3_le = (165,405, pygame.image.load("Buttons/3_button_le.png").convert_alpha(), 5)
+sz4_img = pygame.image.load("Buttons/4_button.png").convert_alpha()
+sz4_le = (165,565, pygame.image.load("Buttons/4_button_le.png").convert_alpha(), 5)
 
 resume_button = Button(420, 240, resume_img, 10)
 quit_button = Button(510, 390, quit_img, 10)
 start_button = Button(479, 300, start_img, 10)
+sz1_button = Button(162,80, sz1_img, 5)
+sz2_button = Button(160,240, sz2_img, 5)
+sz3_button = Button(160,400, sz3_img, 5)
+sz4_button = Button(160,560, sz4_img, 5)
 
 bomba_img = pygame.image.load("Backs/bomba_alap.png").convert_alpha()
 
@@ -642,6 +750,23 @@ lud_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_lud.png").conver
 talp_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_talp.png").convert_alpha()
 tojas_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_tojas.png").convert_alpha()
 
+kerdes_modul_img = pygame.image.load("kerdesek/kerdesek_panel.png").convert_alpha()
+
+a_gomb_img = pygame.image.load("kerdesek/A/a_alap.png").convert_alpha()
+a_gomb_action = (pygame.image.load("kerdesek/A/a_kijelol.png").convert_alpha(), pygame.image.load("kerdesek/A/a_benyom.png").convert_alpha())
+b_gomb_img = pygame.image.load("kerdesek/B/b_alap.png").convert_alpha()
+b_gomb_action = (pygame.image.load("kerdesek/B/b_kijelol.png").convert_alpha(), pygame.image.load("kerdesek/B/b_benyom.png").convert_alpha())
+c_gomb_img = pygame.image.load("kerdesek/C/c_alap.png").convert_alpha()
+c_gomb_action = (pygame.image.load("kerdesek/C/c_kijelol.png").convert_alpha(), pygame.image.load("kerdesek/C/c_benyom.png").convert_alpha())
+d_gomb_img = pygame.image.load("kerdesek/D/d_alap.png").convert_alpha()
+d_gomb_action = (pygame.image.load("kerdesek/D/d_kijelol.png").convert_alpha(), pygame.image.load("kerdesek/D/d_benyom.png").convert_alpha())
+
+progress_0_img = pygame.image.load("kerdesek/allapot/progress_0.png").convert_alpha()
+progress_1_img = pygame.image.load("kerdesek/allapot/progress_1.png").convert_alpha()
+progress_2_img = pygame.image.load("kerdesek/allapot/progress_2.png").convert_alpha()
+progress_3_img = pygame.image.load("kerdesek/allapot/progress_3.png").convert_alpha()
+progress_4_img = pygame.image.load("kerdesek/allapot/progress_4.png").convert_alpha()
+
 jel_alap = pygame.image.load("Jelzok/alap_keret.png").convert_alpha()
 jel_kijel = pygame.image.load("Jelzok/kijelol_keret.png").convert_alpha()
 # jel_kat = pygame.image.load("Jelzok/kat_keret.png").convert_alpha()
@@ -657,7 +782,7 @@ honking = (honk_1, honk_2, honk_3)
 # honk_1.play()
 
 
-csapat_input = Input(500, 230, 200, 40)
+csapat_input = Input(500, 230, 200, 40, 28)
 visszaszamlalo = Timer(10, 25)
 
 # összes modul hivatkozása
@@ -666,7 +791,7 @@ k_k = KomplexKabel(None, komplex_kabel_modul_img)
 j = SimaDrot(None, sima_drot_modul_img)
 l = SimaDrot(None, sima_drot_modul_img)
 g = Gomb(None, gomb_modul_img)
-ker = SimaDrot(None, sima_drot_modul_img)
+ker = Kerdes(None, kerdes_modul_img)
 ido = SimaDrot(None, sima_drot_modul_img)
 modulok = [s_d, k_k, j, l, g, ker, ido]
 not_use_m = [ido]
@@ -702,11 +827,36 @@ def modul_draw(self, p_order=None, jel=jelek, m_kesz=None):
     screen.blit(self.image, self.pos)
     change_image(self.pos[0] + 1, self.pos[1] + 1, jel, 1, self.done)
 
+# Szöveg
+
+family = "Grand9K Pixel.ttf"
+font = pygame.font.Font(family, 36) #õ -> ő
+
+def text_draw(text, x, y, color=(255,255,255), font=font):
+    img = font.render(text, True, color)
+    screen.blit(img,(x,y))
+
+def display_text(text, pos, width=800, font=font, color=(255,255,255)):
+    collection = [word.split(' ') for word in text.splitlines()]
+    space = font.size(' ')[0]
+    x,y = pos
+    for lines in collection:
+        for words in lines:
+            word_surface = font.render(words, True, color)
+            word_width , word_height = word_surface.get_size()
+            if x + word_width >= width:
+                x = pos[0]
+                y += word_height
+            screen.blit(word_surface, (x,y))
+            x += word_width + space
+        x = pos[0]
+        y += word_height
+
 # megcsinálja az eredmenyek mappát
 try:
     os.mkdir("eredmenyek")
 except Exception as e:
-   print(f"hiba az eredmenyek mappa létrehozásánál: {e}")
+    print(f"hiba az eredmenyek mappa létrehozásánál: {e}")
 
 def boom():
     print("boom")
@@ -757,20 +907,10 @@ while True:
         screen.fill((88, 88, 88))
         Image(141, 25, bomba_img)
 
-        for modul in modulok[:]:
-            if modul not in not_use_m:
-                try:
-                    modul.drotok_draw()
-                except:
-                    pass
-                try:
-                    modul.kabelek_draw()
-                except:
-                    pass
-                try:
-                    modul.gomb_draw()
-                except:
-                    pass
+        s_d.drotok_draw()
+        k_k.kabelek_draw()
+        g.gomb_draw()
+        ker.kerdes_modul_draw()
 
         visszaszamlalo.timer_draw(changing_colors[visszaszamlalo.changing_ind])
 
@@ -793,7 +933,7 @@ while True:
     elif start_page:
         Image(0, 0, start_back_img)
 
-        csapat_input.input_draw()
+        csapat_input.input_draw(5, -2)
 
         if start_button.puss_button_draw(start_le):
             if csapat_input.buffer != "":
@@ -803,6 +943,33 @@ while True:
             start_page = False
             game = True
             running = True
+            hiba = False
+
+            """
+            if osztaly_input.value != "":
+                start_page = False
+                game = True
+                running = True
+                hiba = False
+
+            else:
+                hiba = True
+            """
+
+        if hiba and csapat_input.buffer == "":
+            text_draw("Nem adtad még meg az osztályt!", 450, 180, (255, 0, 0), pygame.font.Font(font, 20))
+
+        if sz1_button.puss_button_draw(sz1_le, szintek[0]):
+            szintek = [True, False, False, False]
+
+        if sz2_button.puss_button_draw(sz2_le, szintek[1]):
+            szintek = [False, True, False, False]
+
+        if sz3_button.puss_button_draw(sz3_le, szintek[2]):
+            szintek = [False, False, True, False]
+
+        if sz4_button.puss_button_draw(sz4_le, szintek[3]):
+            szintek = [False, False, False, True]
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -816,6 +983,8 @@ while True:
 
 
     elif menu:
+        if not running:
+            Image(0,0,start_back_img)
         back = Image(0, 0, back_img, screen_x, False, (True, 50))
 
         if quit_button.puss_button_draw(quit_le):
