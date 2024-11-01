@@ -9,6 +9,8 @@ import defs as f
 pos_order = [(197, 81), (528, 81), (859, 81), (197, 416), (528, 416), (859, 416), ]
 changing_colors = [(255, 0, 0), (255, 135, 35), (235, 35, 200)]
 
+#logo = pygame.image.load("logo_128x128.png")
+#pygame.display.set_icon(logo)
 screen_x = 1280
 screen_y = 720
 
@@ -21,6 +23,7 @@ matricak = [bool(r.randint(0, 1)), bool(r.randint(0, 1)), bool(r.randint(0, 1))]
 # 0-1: balra; 2-3: jobbra
 elemek = [bool(r.randint(0, 1)), bool(r.randint(0, 1)), bool(r.randint(0, 1)), bool(r.randint(0, 1))]
 
+time = 300
 start_page = True
 menu = False
 game = False
@@ -31,6 +34,7 @@ scaling = False
 szintek = [True, False, False, False]
 
 pygame.init()
+pygame.mixer.init()
 #info = pygame.display.Info() (.current_w, .current_h)
 screen = pygame.display.set_mode((screen_x, screen_y))
 screen.fill((88, 88, 88))
@@ -156,6 +160,7 @@ class Button:
                     Image(self.rect.x, self.rect.y, images[1], self.scale)
 
                 elif pygame.mouse.get_pressed()[0] == 0 and self.click:
+                    Image(self.rect.x, self.rect.y, images[0], self.scale)
                     self.click = False
                     action = True
 
@@ -189,15 +194,24 @@ class Input:
         self.active = False
         self.value = ""
 
-    def input_draw(self, plus_x:int = 5, plus_y:int = 5, background=(20,20,20), active_color=(255,255,255), passive_color=(88,88,88), text_color=(255,255,255)):
+    def input_draw(self, plus_x:int = 5, plus_y:int = 5, background=(20,20,20), active_color=(255,255,255), passive_color=(88,88,88), text_color=(255,255,255), mask = None):
 
         pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] == 1:
-                self.active = True
+        if mask is None:
+            if self.rect.collidepoint(pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    self.active = True
 
-        elif pygame.mouse.get_pressed()[0] == 1:
-            self.active = False
+            elif pygame.mouse.get_pressed()[0] == 1:
+                self.active = False
+
+        else:
+            if mask.collidepoint(pos):
+                if pygame.mouse.get_pressed()[0] == 1:
+                    self.active = True
+
+            elif pygame.mouse.get_pressed()[0] == 1:
+                self.active = False
 
         if self.active:
             for event in pygame.event.get():
@@ -676,7 +690,6 @@ class Jelszo:
         self.done = False
 
         self.jelszo = f.password()
-        print(self.jelszo[0])
 
     def jelszo_modul_draw(self):
         if self.pos == (0,0):
@@ -702,7 +715,7 @@ class Jelszo:
             pygame.draw.rect(screen, (57, 35, 0), self.rect)
             pygame.draw.rect(screen, (31, 19, 0), self.rect, 2)
         else:
-            self.input.input_draw(5, -1, (57, 35, 0), (255, 255, 255), (31, 19, 0))
+            self.input.input_draw(5, -1, (57, 35, 0), (255, 255, 255), (31, 19, 0), (255,255,255), pygame.Rect(self.pos[0], self.pos[1], 244, 244))
 
         if self.input.value != "":
             if self.input.value.lower() == self.jelszo[0]:
@@ -710,6 +723,158 @@ class Jelszo:
 
             else:
                 boom()
+
+
+class LibaMondja:
+    def __init__(self, index:int, image:pygame.surface.Surface) -> None:
+        self.pos = (0,0)
+        self.index = index
+        self.image = image
+        self.done = False
+
+        # 0-3: allo; 4-7: fekvo
+        # 0: kék; 1: piros; 2: sárga; 3: zöld
+        self.szinek = ((allo_kek_img, allo_kek_img_action), (allo_piros_img, allo_piros_img_action), (allo_sarga_img, allo_sarga_img_action), (allo_zold_img, allo_zold_img_action), (fekvo_kek_img, fekvo_kek_img_action), (fekvo_piros_img, fekvo_piros_img_action), (fekvo_sarga_img, fekvo_sarga_img_action), (fekvo_zold_img, fekvo_zold_img_action))
+        self.make = True
+        self.voices = honking
+        self.play = False
+        self.limit = time
+        self.round = 0
+
+    def mondja_modul_draw(self):
+        modul_draw(self)
+
+        if self.make:
+            self.round += 1
+            self.honk = r.randint(1,4)
+            self.limit = visszaszamlalo.current_seconds - 2
+            pygame.mixer.pause()
+            self.gombok = [None, None, None, None]
+
+            if spec_chart:
+                if self.honk == 1:
+                    if r.randint(0,1):
+                        self.gombok[1] = 3
+
+                    if r.randint(0,1):
+                        self.gombok[3] = 3
+
+                    else:
+                        self.gombok[1 + 2*r.randint(0,1)] = 3
+
+                elif self.honk == 2:
+                    self.gombok[2] = 1
+
+                elif self.honk == 3:
+                    if r.randint(0,1):
+                        self.gombok[0] = 0
+
+                    if r.randint(0,1):
+                        self.gombok[2] = 0
+
+                    else:
+                        self.gombok[2*r.randint(0,1)] = 0
+
+                else:
+                    self.gombok[r.randint(0,3)] = 2*r.randint(0,1)
+
+            else:
+                if self.honk == 2:
+                    self.gombok[r.randint(0,3)] = 2
+
+                elif self.honk == 3:
+                    if r.randint(0,1):
+                            self.gombok[1] = 3
+
+                    if r.randint(0,1):
+                        self.gombok[3] = 3
+
+                    else:
+                        self.gombok[1 + 2*r.randint(0,1)] = 3
+
+                elif self.honk != 1:
+                    self.gombok[3] = 1
+
+            for i in range(len(self.gombok)):
+                if self.gombok[i] == None:
+                    self.gombok[i] = r.randint(0,3)
+
+            button_1 = Button(self.pos[0]+9, self.pos[1]+9, self.szinek[self.gombok[0]][0])
+            button_2 = Button(self.pos[0]+77, self.pos[1]+9, self.szinek[self.gombok[1]+4][0])
+            button_3 = Button(self.pos[0]+152, self.pos[1]+77, self.szinek[self.gombok[2]][0])
+            button_4 = Button(self.pos[0]+9, self.pos[1]+152, self.szinek[self.gombok[3]+4][0])
+            self.buttons = [button_1, button_2, button_3, button_4]
+            self.make = False
+
+        if self.done:
+            for i in range(len(self.buttons)):
+                if i % 2 == 0:
+                    plus = 0
+                else:
+                    plus = 4
+
+                Image(self.buttons[i].rect.x, self.buttons[i].rect.y, self.szinek[self.gombok[i]+plus][0])
+        
+        else:
+            if self.limit > visszaszamlalo.current_seconds:
+                if visszaszamlalo.current_seconds % (self.honk+2) == 0:
+                    if not self.play:
+                        self.voices[self.honk-1].play()
+                        self.play = True
+
+                else:
+                    self.play = False
+
+            for i in range(len(self.buttons)):
+                if i % 2 == 0:
+                    plus = 0
+                else:
+                    plus = 4
+
+                if self.buttons[i].button_draw(self.szinek[self.gombok[i]+plus][1])[0]:
+                    if spec_chart:
+                        if self.honk == 1:
+                            if i == 1 or i == 3:
+                                if self.gombok[i] == 3:
+                                    self.make = True
+
+                        elif self.honk == 2:
+                            if i == 2 and self.gombok[2] == 1:
+                                self.make = True
+
+                        elif self.honk == 3:
+                            if i == 0 or i == 2:
+                                if self.gombok[i] == 0:
+                                    self.make = True
+
+                        else:
+                            if self.gombok[i] == 2 or self.gombok[i] == 0:
+                                self.make = True
+
+                    else:
+                        if self.honk == 1:
+                            if i == 0 or i == 2:
+                                self.make = True
+
+                        elif self.honk == 2:
+                            if self.gombok[i] == 2:
+                                self.make = True
+
+                        elif self.honk == 3:
+                            if i == 1 or i == 3:
+                                if self.gombok[i] == 3:
+                                    self.make = True
+
+                        else:
+                            if self.gombok[3] == 1:
+                                self.make = True
+
+                    if not self.make:
+                        boom()
+
+                    if self.round == 4:
+                        self.done = True
+                        self.make = False
 
 
 # Betöltés
@@ -818,6 +983,26 @@ progress_4_img = pygame.image.load("kerdesek/allapot/progress_4.png").convert_al
 
 jelszo_modul_img = pygame.image.load("jelszo/jelszo_modul.png").convert_alpha()
 
+lud_mondja_modul_img = pygame.image.load("simon/szines.png").convert_alpha()
+
+allo_kek_img = pygame.image.load("simon/allo/alap_kek_allo.png").convert_alpha()
+allo_kek_img_action = (pygame.image.load("simon/allo/kijelolt_kek_allo.png").convert_alpha(), pygame.image.load("simon/allo/benyom_kek_allo.png").convert_alpha())
+allo_piros_img = pygame.image.load("simon/allo/alap_piros_allo.png").convert_alpha()
+allo_piros_img_action = (pygame.image.load("simon/allo/kijelolt_piros_allo.png").convert_alpha(), pygame.image.load("simon/allo/benyom_piros_allo.png").convert_alpha())
+allo_sarga_img = pygame.image.load("simon/allo/alap_sarga_allo.png").convert_alpha()
+allo_sarga_img_action = (pygame.image.load("simon/allo/kijelolt_sarga_allo.png").convert_alpha(), pygame.image.load("simon/allo/benyom_sarga_allo.png").convert_alpha())
+allo_zold_img = pygame.image.load("simon/allo/alap_zold_allo.png").convert_alpha()
+allo_zold_img_action = (pygame.image.load("simon/allo/kijelolt_zold_allo.png").convert_alpha(), pygame.image.load("simon/allo/benyom_zold_allo.png").convert_alpha())
+
+fekvo_kek_img = pygame.image.load("simon/fekvo/alap_kek_fekvo.png").convert_alpha()
+fekvo_kek_img_action = (pygame.image.load("simon/fekvo/kijelolt_kek_fekvo.png").convert_alpha(), pygame.image.load("simon/fekvo/benyom_kek_fekvo.png").convert_alpha())
+fekvo_piros_img = pygame.image.load("simon/fekvo/alap_piros_fekvo.png").convert_alpha()
+fekvo_piros_img_action = (pygame.image.load("simon/fekvo/kijelolt_piros_fekvo.png").convert_alpha(), pygame.image.load("simon/fekvo/benyom_piros_fekvo.png").convert_alpha())
+fekvo_sarga_img = pygame.image.load("simon/fekvo/alap_sarga_fekvo.png").convert_alpha()
+fekvo_sarga_img_action = (pygame.image.load("simon/fekvo/kijelolt_sarga_fekvo.png").convert_alpha(), pygame.image.load("simon/fekvo/benyom_sarga_fekvo.png").convert_alpha())
+fekvo_zold_img = pygame.image.load("simon/fekvo/alap_zold_fekvo.png").convert_alpha()
+fekvo_zold_img_action = (pygame.image.load("simon/fekvo/kijelolt_zold_fekvo.png").convert_alpha(), pygame.image.load("simon/fekvo/benyom_zold_fekvo.png").convert_alpha())
+
 jel_alap = pygame.image.load("Jelzok/alap_keret.png").convert_alpha()
 jel_kijel = pygame.image.load("Jelzok/kijelol_keret.png").convert_alpha()
 # jel_kat = pygame.image.load("Jelzok/kat_keret.png").convert_alpha()
@@ -826,21 +1011,22 @@ jel_kesz = pygame.image.load("Jelzok/kesz_keret.png").convert_alpha()
 jelek = (jel_alap, jel_kijel, jel_kesz)
 
 explosion_sound = pygame.mixer.Sound("Hangok/explosion.mp3")
-honk_1 = pygame.mixer.Sound("Hangok/honk_1.mp3")
-honk_2 = pygame.mixer.Sound("Hangok/honk_2.mp3")
-honk_3 = pygame.mixer.Sound("Hangok/honk_3.mp3")
-honking = (honk_1, honk_2, honk_3)
+honk_1 = pygame.mixer.Sound("Hangok/1_honking.mp3")
+honk_2 = pygame.mixer.Sound("Hangok/2_honking.mp3")
+honk_3 = pygame.mixer.Sound("Hangok/3_honking.mp3")
+honk_4 = pygame.mixer.Sound("Hangok/4_honking.mp3")
+honking = (honk_1, honk_2, honk_3, honk_4)
 # honk_1.play()
 
 
 csapat_input = Input(500, 230, 200, 40, 28)
-visszaszamlalo = Timer(10, 25)
+visszaszamlalo = Timer(10, 25, time)
 
 # összes modul hivatkozása
 s_d = SimaDrot(None, sima_drot_modul_img)
 k_k = KomplexKabel(None, komplex_kabel_modul_img)
 j = Jelszo(None, jelszo_modul_img)
-l = SimaDrot(None, sima_drot_modul_img)
+l = LibaMondja(None, lud_mondja_modul_img)
 g = Gomb(None, gomb_modul_img)
 ker = Kerdes(None, kerdes_modul_img)
 ido = SimaDrot(None, sima_drot_modul_img)
@@ -956,6 +1142,29 @@ def end_game():
 
 # Folyamat
 
+print("Szériaszám: "+szeria_root[0])
+bal = 0
+jobb = 0
+for i in range(len(elemek)):
+    if True == elemek[i]:
+        if i < 2:
+            bal += 1
+
+        else:
+            jobb += 1
+print(f"Elemek: bal:{bal}; jobb:{jobb}")
+print("Matricák:")
+for i in range(len(matricak)):
+    if True == matricak[i]:
+        if i == 0:
+            print("-piros")
+
+        elif i == 1:
+            print("-narancssárga")
+
+        else:
+            print("-fekete")
+
 while True:
 
     if game:
@@ -967,7 +1176,7 @@ while True:
         g.gomb_draw()
         ker.kerdes_modul_draw()
         j.jelszo_modul_draw()
-        
+        l.mondja_modul_draw()
 
         visszaszamlalo.timer_draw(changing_colors[visszaszamlalo.changing_ind])
 
