@@ -31,6 +31,19 @@ def generate_drotok() -> list[tuple[int, bool]]:
     return(drotok)
 
 
+def different_search(l_word:list[str]) -> int:
+    for e in [4,3,1,0]:
+
+        c = 0
+        for i in range(1,len(l_word)):
+
+            if l_word[i-1][e] != l_word[i][e]:
+                c += 1
+                print(c)
+
+            if c == len(l_word)-1:
+                return(e)
+
 def password() -> tuple[str, list[list[str]]]:
     words = ['libák', 'szent', 'lámpa', 'hálás', 'pince', 'újbor', 'vihar', 'bunda', 'kabát', 'deres', 'fehér', 'keres', 'talál', 'erény', 'áldás', 'gágog', 'tojás', 'arany', 'óriás', 'fióka']
     letter = [['l', 's', 'h', 'p', 'ú', 'v', 'b', 'k', 'd', 'f', 't', 'e', 'á', 'g', 'a', 'ó'], #1
@@ -45,6 +58,22 @@ def password() -> tuple[str, list[list[str]]]:
     p_word = r.randint(0, len(words)-1)
     matrix = []
     p_black_list = []
+
+    col = None
+    similar_words = [words[p_word]]
+    similar = []
+    col_black_list = []
+
+    for i in range(len(p_pair)):
+        if i != p_word and words[p_word][2] == p_pair[i][1]:
+            similar.append(i)
+            similar_words.append(words[i])
+
+    if len(similar_words) > 1:
+        col = different_search(similar_words)
+        for e in similar:
+            col_black_list.append(words[e][col])
+
 
     p_row = []
     while len(p_row) < 5:
@@ -79,10 +108,17 @@ def password() -> tuple[str, list[list[str]]]:
                                     for e in p_pair:
                                         if e[0] == letter[i][index]:
                                             p_black_list.append(e[1])
-                                
-                                matrix[i].append(letter[i][index])
-                                have_it.append(letter[i][index])
-                                break
+
+                                if col is not None and i == col:
+                                    if letter[i][index] not in col_black_list:
+                                        matrix[i].append(letter[i][index])
+                                        have_it.append(letter[i][index])
+                                        break
+
+                                else:
+                                    matrix[i].append(letter[i][index])
+                                    have_it.append(letter[i][index])
+                                    break
 
                         l += 1
 
