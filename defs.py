@@ -39,7 +39,6 @@ def different_search(l_word:list[str]) -> int:
 
             if l_word[i-1][e] != l_word[i][e]:
                 c += 1
-                print(c)
 
             if c == len(l_word)-1:
                 return(e)
