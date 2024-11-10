@@ -18,7 +18,7 @@ start_page = True
 hiba = False
 menu = False
 game = False
-explosion = False
+explosion = None
 end_page = False
 running = False
 scaling = False
@@ -67,13 +67,13 @@ def scaled(update:bool = True):
         resume_button = Button(bomb_pos_x+304*global_scaling, bomb_pos_y+228*global_scaling, resume_img, 10*global_scaling)
         quit_button = Button(bomb_pos_x+394*global_scaling, bomb_pos_y+378*global_scaling, quit_img, 10*global_scaling)
         start_button = Button(bomb_pos_x+363*global_scaling, bomb_pos_y+288*global_scaling, start_img, 10*global_scaling)
-        back_button = Button(bomb_pos_x, bomb_pos_y+8*global_scaling, back_img, 5*global_scaling)
+        back_button = Button(bomb_pos_x+5*global_scaling, bomb_pos_y+8*global_scaling, back_img, 5*global_scaling)
         sz1_button = Button(bomb_pos_x+46*global_scaling, bomb_pos_y+68*global_scaling, sz1_img, 5*global_scaling)
         sz2_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+228*global_scaling, sz2_img, 5*global_scaling)
         sz3_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+388*global_scaling, sz3_img, 5*global_scaling)
         sz4_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+548*global_scaling, sz4_img, 5*global_scaling)
         left_button = Button(bomb_pos_x+5*global_scaling, bomb_pos_y+282*global_scaling, left_img, 4*global_scaling)
-        right_button = Button(bomb_pos_x+basic_x-19*4*global_scaling, bomb_pos_y+286*global_scaling, right_img, 4*global_scaling)
+        right_button = Button(bomb_pos_x+basic_x-19*4*global_scaling-5*global_scaling, bomb_pos_y+286*global_scaling, right_img, 4*global_scaling)
 
         try:
             save = csapat_input.buffer
@@ -419,33 +419,43 @@ class SimaDrot:
             if self.drotok[i] is not None:
                 self.drotok_color.append(self.drotok[i][0])
 
+        next = False
+
         if f.count(self.drotok_color, 2) >= 2:
-            if szeria_root[1] == 3:
-                self.correct = 3
+            next = True
+            for i in range(len(self.drotok_color)):
+                if i != 2:
+                    if f.count(self.drotok_color, i) >= 2:
+                        next = False
+                        break
 
-            elif szeria_root[1] % 2 == 0 and matricak[2]:
-                self.correct = 2
-
-            elif szeria_root[1] % 2 == 1:
-                self.correct = 3
-
-            elif matricak[2]:
-                self.correct = 1
-
-            else:
-                if szeria_root[1] / 2 + 7 == 8:
-                    self.correct = 0
-
-                elif szeria_root[1] / 2 + 7 == 9:
-                    self.correct = 2
-
-                elif szeria_root[1] / 2 + 7 == 10:
+            if next:
+                if szeria_root[1] == 3:
                     self.correct = 3
 
-                else:
+                elif szeria_root[1] % 2 == 0 and matricak[2]:
+                    self.correct = 2
+
+                elif szeria_root[1] % 2 == 1:
+                    self.correct = 3
+
+                elif matricak[2]:
                     self.correct = 1
 
-        elif self.drotok_color[2] == 0 and elemek[2:4] == [True, True]:
+                else:
+                    if szeria_root[1] / 2 + 7 == 8:
+                        self.correct = 0
+
+                    elif szeria_root[1] / 2 + 7 == 9:
+                        self.correct = 2
+
+                    elif szeria_root[1] / 2 + 7 == 10:
+                        self.correct = 3
+
+                    else:
+                        self.correct = 1
+
+        if not next and self.drotok_color[2] == 0 and elemek[2:4] == [True, True]:
             self.correct = 0
 
         elif f.count(self.drotok_color, 1) == 2 and f.count(self.drotok_color, 2) == 0:
@@ -1031,9 +1041,6 @@ class Idozito:
         cooldown = pygame.Rect(self.pos[0]+27*self.scaling, self.pos[1]+27*self.scaling, 40*(self.szamlalo.current_seconds%5)*self.scaling+10*self.scaling, 13*self.scaling)
         pygame.draw.rect(screen, color, cooldown)
 
-        if self.szamlalo.current_seconds == 0:
-            boom()
-
 
 class Egyebek:
     def __init__(self, elem, matrica, scaling:float|int = 1) -> None:
@@ -1271,7 +1278,9 @@ honking = (honk_1, honk_2, honk_3, honk_4)
 def generate_bomb():
     # Változok
 
-    global spec_chart, szeria_root, matricak, elemek, jellem
+    global spec_chart, szeria_root, matricak, elemek, jellem, explosion
+
+    explosion = False
 
     spec_chart = bool(r.randint(0, 1))
     szeria_root = f.szerianumber(spec_chart)
@@ -1518,6 +1527,9 @@ while True:
             if event.type == pygame.USEREVENT:
                 modulok[6].szamlalo.current_seconds -= 1
 
+        if modulok[6].szamlalo.current_seconds == 0:
+            boom()
+
 
     elif start_page:
         screen.fill((30, 17, 34))
@@ -1621,8 +1633,12 @@ while True:
             elif event.type == pygame.VIDEORESIZE:
                 scaled()
 
-            if running and event.type == pygame.USEREVENT:
-                modulok[6].szamlalo.current_seconds -= 1
+            if running:
+                if event.type == pygame.USEREVENT:
+                    modulok[6].szamlalo.current_seconds -= 1
+
+                if modulok[6].szamlalo.current_seconds == 0:
+                    boom()
 
 
     elif end_page:
