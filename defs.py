@@ -187,3 +187,29 @@ def szerianumber(spec:bool) -> str:
             digital_root.append(int(e))
 
     return sz_n, digital_root[0]
+
+def test_write(sz_root, elemek, matricak):
+    print("Szériaszám: "+sz_root[0])
+
+    bal = 0
+    jobb = 0
+    for i in range(len(elemek)):
+        if True == elemek[i]:
+            if i < 2:
+                bal += 1
+
+            else:
+                jobb += 1
+    print(f"Elemek: bal:{bal}; jobb:{jobb}")
+
+    print("Matricák:")
+    for i in range(len(matricak)):
+        if True == matricak[i]:
+            if i == 0:
+                print("-fehér")
+
+            elif i == 1:
+                print("-narancssárga")
+
+            else:
+                print("-fekete")

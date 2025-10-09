@@ -1,8 +1,8 @@
-import os
+import os, pygame
 import random as r
 from sys import exit
-import pygame
 import defs as f
+
 
 # Állandok
 
@@ -30,11 +30,13 @@ pygame.mixer.init()
 channelhonk = pygame.mixer.Channel(0)
 channelboom = pygame.mixer.Channel(1)
 #info = pygame.display.Info() (.current_w, .current_h)
-# (basic_x+232, basic_y+24)
-screen = pygame.display.set_mode((basic_x, basic_y), pygame.RESIZABLE)
+screen = pygame.display.set_mode((basic_x+232, basic_y+24), pygame.RESIZABLE)
 pygame.display.set_caption("Keep Honking and Nobody Explodes")
 clock = pygame.time.Clock()
 pygame.time.set_timer(pygame.USEREVENT, 1000)
+
+import img_load as il
+
 
 def scaled(update:bool = True):
     global global_scaling, pos_order, screen_x, screen_y, bomb_pos_x, bomb_pos_y, running
@@ -64,16 +66,16 @@ def scaled(update:bool = True):
     if update:
         global resume_button, quit_button, start_button, back_button, sz1_button, sz2_button, sz3_button, sz4_button, left_button, right_button, csapat_input
 
-        resume_button = Button(bomb_pos_x+304*global_scaling, bomb_pos_y+228*global_scaling, resume_img, 10*global_scaling)
-        quit_button = Button(bomb_pos_x+394*global_scaling, bomb_pos_y+378*global_scaling, quit_img, 10*global_scaling)
-        start_button = Button(bomb_pos_x+363*global_scaling, bomb_pos_y+288*global_scaling, start_img, 10*global_scaling)
-        back_button = Button(bomb_pos_x+5*global_scaling, bomb_pos_y+8*global_scaling, back_img, 5*global_scaling)
-        sz1_button = Button(bomb_pos_x+46*global_scaling, bomb_pos_y+68*global_scaling, sz1_img, 5*global_scaling)
-        sz2_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+228*global_scaling, sz2_img, 5*global_scaling)
-        sz3_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+388*global_scaling, sz3_img, 5*global_scaling)
-        sz4_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+548*global_scaling, sz4_img, 5*global_scaling)
-        left_button = Button(bomb_pos_x+5*global_scaling, bomb_pos_y+282*global_scaling, left_img, 4*global_scaling)
-        right_button = Button(bomb_pos_x+basic_x-19*4*global_scaling-5*global_scaling, bomb_pos_y+286*global_scaling, right_img, 4*global_scaling)
+        resume_button = Button(bomb_pos_x+304*global_scaling, bomb_pos_y+228*global_scaling, il.resume_img, 10*global_scaling)
+        quit_button = Button(bomb_pos_x+394*global_scaling, bomb_pos_y+378*global_scaling, il.quit_img, 10*global_scaling)
+        start_button = Button(bomb_pos_x+363*global_scaling, bomb_pos_y+288*global_scaling, il.start_img, 10*global_scaling)
+        back_button = Button(bomb_pos_x+5*global_scaling, bomb_pos_y+8*global_scaling, il.back_img, 5*global_scaling)
+        sz1_button = Button(bomb_pos_x+46*global_scaling, bomb_pos_y+68*global_scaling, il.sz1_img, 5*global_scaling)
+        sz2_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+228*global_scaling, il.sz2_img, 5*global_scaling)
+        sz3_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+388*global_scaling, il.sz3_img, 5*global_scaling)
+        sz4_button = Button(bomb_pos_x+44*global_scaling, bomb_pos_y+548*global_scaling, il.sz4_img, 5*global_scaling)
+        left_button = Button(bomb_pos_x+5*global_scaling, bomb_pos_y+282*global_scaling, il.left_img, 4*global_scaling)
+        right_button = Button(bomb_pos_x+basic_x-19*4*global_scaling-5*global_scaling, bomb_pos_y+286*global_scaling, il.right_img, 4*global_scaling)
 
         try:
             save = csapat_input.buffer
@@ -86,72 +88,38 @@ def scaled(update:bool = True):
         if running:
             global modulok, not_use_m, jellem
 
-
-            jellem.pos_list = []
-            for i in range(len(jellem.kijelolve)):
-                if i == 1 or i == 3:
-                    x_bonus = 399*jellem.scaling
-
-                else:
-                    x_bonus = 0
-
-                if i >= 2:
-                    y_bonus = 681*jellem.scaling
-
-                else:
-                    y_bonus = 0
-
-                jellem.pos_list.append((bomb_pos_x+225*jellem.scaling+x_bonus, bomb_pos_y+3*jellem.scaling+y_bonus))
-
-            jellem.matrica_buttons = []
-            for i in range(len(jellem.current_matrica)):
-                jellem.matrica_buttons.append(Button(jellem.pos_list[jellem.current_matrica[i][0]][0], jellem.pos_list[jellem.current_matrica[i][0]][1], jellem.current_matrica[i][1], jellem.scaling))
-
+            jellem.update()
 
             for i in range(len(modulok)):
                 if i not in not_use_m:
-                    modulok[i].pos = pos_order[modulok[i].index]
-
-                    #0: SimaDrót; 1: KomplexKábel; 2: Gomb; 3: Jelszó; 4: Libamondja; 5: Kérdés; 6: Idözítő
-
-                    if i == 1:
-                        for j in range(len(modulok[1].kabelek)):
-                            modulok[1].num_kabel[j] = Button(modulok[1].pos[0] + 22*modulok[1].scaling + 28 * j*modulok[1].scaling, modulok[1].pos[1] + 23*modulok[1].scaling, modulok[1].num[modulok[1].kabelek[j][0]][0], modulok[1].scaling)
-
-                    elif i == 2:
-                        modulok[2].gomb = Button(modulok[2].pos[0] + 100*modulok[2].scaling, modulok[2].pos[1] + 39*modulok[2].scaling, modulok[2].colors[modulok[2].gomb_data[0]][0], modulok[2].scaling)
-
-                    elif i == 3:
-                        modulok[3].rect = pygame.Rect(modulok[3].pos[0]+71*modulok[3].scaling, modulok[3].pos[1]+171*modulok[3].scaling, 82*modulok[3].scaling, 25*modulok[3].scaling)
-                        save = modulok[3].input.buffer
-                        modulok[3].input = Input(modulok[3].rect.x, modulok[3].rect.y, 82*modulok[3].scaling, 25*modulok[3].scaling, 16*modulok[3].scaling, True)
-                        modulok[3].input.buffer = save
-
-                    elif i == 4:
-                        modulok[4].buttons = []
-                        for j in range(4):
-                            if j % 2 == 0:
-                                bonus = 0
-
-                            else:
-                                bonus = 4
-
-                            modulok[4].buttons.append(Button(modulok[4].pos[0]+modulok[4].pos_bonus[j][0]*modulok[4].scaling, modulok[4].pos[1]+modulok[4].pos_bonus[j][1]*modulok[4].scaling, modulok[4].szinek[modulok[4].gombok[j]+bonus][0], modulok[4].scaling))
-
-                    elif i == 5:
-                        for j in range(len(modulok[5].gombok)):
-                            if j > 1:
-                                half = 5*modulok[5].scaling
-
-                            else:
-                                half = 0
-
-                            modulok[5].gombok[j] = Button(modulok[5].pos[0]+23*modulok[5].scaling+48*j*modulok[5].scaling+half, modulok[5].pos[1]+139, modulok[5].betuk[j][0], modulok[5].scaling)
-
-                    elif i == 6:
-                        modulok[6].szamlalo = Timer(modulok[6].pos[0]+55*modulok[6].scaling, modulok[6].pos[1]+113*modulok[6].scaling, 36*modulok[6].scaling, modulok[6].szamlalo.current_seconds)
+                    modulok[i].update()
 
 scaled(False)
+
+
+family = "Grand9K Pixel.ttf"
+font = pygame.font.Font(family, 36) #õ -> ő
+
+def text_draw(text, x, y, color=(255,255,255), font=font):
+    img = font.render(text, True, color)
+    screen.blit(img,(x,y))
+
+def display_text(text, pos, width=800, font=font, color=(255,255,255)):
+    collection = [word.split(' ') for word in text.splitlines()]
+    space = font.size(' ')[0]
+    x,y = pos
+    for lines in collection:
+        for words in lines:
+            word_surface = font.render(words, True, color)
+            word_width , word_height = word_surface.get_size()
+            if x + word_width >= width:
+                x = pos[0]
+                y += word_height
+            screen.blit(word_surface, (x,y))
+            x += word_width + space
+        x = pos[0]
+        y += word_height
+
 
 # Osztályok
 
@@ -301,6 +269,23 @@ class Button:
         return action
 
 
+class Timer:
+    def __init__(self, x: int, y: int, text_size:int, time: int = 300) -> None:
+        self.x = x
+        self.y = y
+        self.text_size = text_size
+        self.current_seconds = time
+        self.changing_ind = 0
+
+    def timer_draw(self, color: tuple[int, int, int] = (255, 255, 255)):
+        display_minutes = self.current_seconds // 60
+        display_seconds = self.current_seconds % 60
+
+        self.changing_ind = (self.current_seconds // 5) % 3
+
+        text_draw(f"{display_minutes:02}:{display_seconds:02}", self.x, self.y, color, pygame.font.Font(family, self.text_size))
+
+
 class Input:
     def __init__(self, x: int, y: int, w: int, h: int, text_size: int, enter: bool=False):
         self.rect = pygame.Rect(x, y, w, h)
@@ -370,34 +355,6 @@ class Input:
         return self.value
 
 
-class Timer:
-    def __init__(self, x: int, y: int, text_size:int, time: int = 300) -> None:
-        self.x = x
-        self.y = y
-        self.text_size = text_size
-        self.current_seconds = time
-        self.changing_ind = 0
-
-    def timer_draw(self, color: tuple[int, int, int] = (255, 255, 255)):
-        display_minutes = self.current_seconds // 60
-        display_seconds = self.current_seconds % 60
-
-        self.changing_ind = (self.current_seconds // 5) % 3
-
-        text_draw(f"{display_minutes:02}:{display_seconds:02}", self.x, self.y, color, pygame.font.Font(family, self.text_size))
-
-
-def change_image(x: int, y: int, images: tuple[pygame.surface.Surface], scale: float|int = 1, close: bool = None):
-    pos = pygame.mouse.get_pos()
-
-    alap = Image(x, y, images[0], scale)
-
-    if close is not None and len(images) > 2 and close:
-        Image(x, y, images[2], scale)
-
-    elif alap.rect.collidepoint(pos):
-        Image(x, y, images[1], scale)
-
 
 class SimaDrot:
     def __init__(self, index: int, image: pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
@@ -408,8 +365,8 @@ class SimaDrot:
         self.done = done
 
         self.colors = (
-        (fekete_drot_img, fekete_drot_action), (kek_drot_img, kek_drot_action), (piros_drot_img, piros_drot_action),
-        (sarga_drot_img, sarga_drot_action))
+        (il.fekete_drot_img, il.fekete_drot_action), (il.kek_drot_img, il.kek_drot_action), (il.piros_drot_img, il.piros_drot_action),
+        (il.sarga_drot_img, il.sarga_drot_action))
         self.drotok = f.generate_drotok()
         self.animate_button = None
 
@@ -513,6 +470,10 @@ class SimaDrot:
             else:
                 c += 1
 
+    def update(self):
+        self.scaling = global_scaling
+        self.pos = (0, 0)
+
 
 class KomplexKabel:
     def __init__(self, index: int, image: pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
@@ -522,63 +483,57 @@ class KomplexKabel:
         self.image = image
         self.done = done
 
-        self.num = ((kabel_1_img, kabel_1_action), (kabel_2_img, kabel_2_action), (kabel_3_img, kabel_3_action),
-                    (kabel_4_img, kabel_4_action))
+        self.num = ((il.kabel_1_img, il.kabel_1_action), (il.kabel_2_img, il.kabel_2_action), (il.kabel_3_img, il.kabel_3_action),
+                    (il.kabel_4_img, il.kabel_4_action))
         self.kabelek = []
         for _ in range(6):
             self.kabelek.append([r.randint(0, 3), False])
 
-        self.first = 5
-        self.second = 4
-        self.third = 3
-        self.fourth = 2
-        self.fifth = 1
-        self.sixth = 0
-        self.num_kabel = [self.sixth, self.fifth, self.fourth, self.third, self.second, self.first]
+        self.num_kabel = [0, 1, 2, 3, 4, 5]
 
         self.cut_them = []
         self.feher = None
 
         # sárga lap
         if szeria_root[1] == 5:
-            self.cut_them.append(self.second)
+            self.cut_them.append(4)
 
         else:
             if True in elemek:
                 self.feher = 1
 
-            self.cut_them.append(self.sixth)
+            self.cut_them.append(0)
 
         # zöld lap
         if szeria_root[1] == 3 or szeria_root[1] == 9:
-            self.cut_them.append(self.fourth)
+            self.cut_them.append(2)
 
         elif szeria_root[1] == 4:
-            self.cut_them.append(self.third)
+            self.cut_them.append(3)
 
         elif matricak[2] or szeria_root[1] == 8:
-            self.cut_them.append(self.third)
+            self.cut_them.append(3)
 
         else:
             if True not in elemek:
                 self.feher = 4
 
             if True not in matricak:
-                self.cut_them.append(self.third)
+                self.cut_them.append(3)
 
             else:
-                self.cut_them.append(self.fourth)
+                self.cut_them.append(2)
 
         # fehér 4. oldal
         if self.feher == 1:
             if szeria_root[1] > 7:
-                self.cut_them.append(self.first)
+                self.cut_them.append(5)
 
             elif matricak[0]:
-                self.cut_them.append(self.first)
+                self.cut_them.append(5)
 
             elif szeria_root[1] < 5:
-                self.cut_them.append(self.fifth)
+                self.cut_them.append(1)
 
             else:
                 self.feher = 4
@@ -591,10 +546,10 @@ class KomplexKabel:
                 current_root = szeria_root[1]
 
             if current_root == 5:
-                self.cut_them.append(self.first)
+                self.cut_them.append(5)
 
             elif current_root == 6:
-                self.cut_them.append(self.fifth)
+                self.cut_them.append(1)
 
     def draw(self):
         if self.pos == (0, 0):
@@ -636,6 +591,10 @@ class KomplexKabel:
                     else:
                         boom()
 
+    def update(self):
+        self.scaling = global_scaling
+        self.pos = (0, 0)
+
 
 class Gomb:
     def __init__(self, index: int, image: pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
@@ -645,8 +604,8 @@ class Gomb:
         self.image = image
         self.done = done
 
-        self.colors = ((kek_gomb_img, kek_gomb_action), (piros_gomb_img, piros_gomb_action), (zold_gomb_img, zold_gomb_action))
-        self.symbols = (lud_szimbolum, talp_szimbolum, tojas_szimbolum)
+        self.colors = ((il.kek_gomb_img, il.kek_gomb_action), (il.piros_gomb_img, il.piros_gomb_action), (il.zold_gomb_img, il.zold_gomb_action))
+        self.symbols = (il.lud_szimbolum, il.talp_szimbolum, il.tojas_szimbolum)
         self.gomb_data = (r.randint(0, 2), r.randint(0, 2))
 
         self.puss = None
@@ -722,6 +681,10 @@ class Gomb:
             else:
                 self.done = allapot[0]
 
+    def update(self):
+        self.scaling = global_scaling
+        self.pos = (0, 0)
+
 
 class Kerdes:
     def __init__(self, index:int, image:pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
@@ -731,8 +694,8 @@ class Kerdes:
         self.image = image
         self.done = done
 
-        self.betuk = ((a_gomb_img, a_gomb_action), (b_gomb_img, b_gomb_action), (c_gomb_img, c_gomb_action), (d_gomb_img, d_gomb_action))
-        self.progress = (progress_0_img, progress_1_img, progress_2_img, progress_3_img, progress_4_img)
+        self.betuk = ((il.a_gomb_img, il.a_gomb_action), (il.b_gomb_img, il.b_gomb_action), (il.c_gomb_img, il.c_gomb_action), (il.d_gomb_img, il.d_gomb_action))
+        self.progress = (il.progress_0_img, il.progress_1_img, il.progress_2_img, il.progress_3_img, il.progress_4_img)
         self.kerdesek = (("Melyik szín, jelenik meg gyakran Szent Mártont ábrázoló képeken?",10),
                         ("Melyik a helyes válasz? ",18),
                         ("Melyik országnak szolgált katonaként Szent Márton?",13),
@@ -805,6 +768,10 @@ class Kerdes:
                     else:
                         boom()
 
+    def update(self):
+        self.scaling = global_scaling
+        self.pos = (0, 0)
+
 
 class Jelszo:
     def __init__(self, index:int, image:pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
@@ -813,6 +780,7 @@ class Jelszo:
         self.index = index
         self.image = image
         self.done = done
+        self.buffer_save = ""
 
         self.jelszo = f.password()
 
@@ -827,6 +795,8 @@ class Jelszo:
         if make:
             self.rect = pygame.Rect(self.pos[0]+71*self.scaling, self.pos[1]+171*self.scaling, 82*self.scaling, 25*self.scaling)
             self.input = Input(self.rect.x, self.rect.y, 82*self.scaling, 25*self.scaling, 16*self.scaling, True)
+            if self.buffer_save != "":
+                self.input.buffer = self.buffer_save
 
         for i in range(len(self.jelszo[1][0])):
             for j in range(len(self.jelszo[1])):
@@ -849,6 +819,12 @@ class Jelszo:
             else:
                 boom()
 
+    def update(self):
+        self.scaling = global_scaling
+        self.pos = (0, 0)
+        if self.input.buffer != "":
+            self.buffer_save = self.input.buffer
+
 
 class LibaMondja:
     def __init__(self, index:int, image:pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
@@ -860,11 +836,14 @@ class LibaMondja:
 
         # 0-3: allo; 4-7: fekvo
         # 0: kék; 1: piros; 2: sárga; 3: zöld
-        self.szinek = ((allo_kek_img, allo_kek_img_action), (allo_piros_img, allo_piros_img_action), (allo_sarga_img, allo_sarga_img_action), (allo_zold_img, allo_zold_img_action), (fekvo_kek_img, fekvo_kek_img_action), (fekvo_piros_img, fekvo_piros_img_action), (fekvo_sarga_img, fekvo_sarga_img_action), (fekvo_zold_img, fekvo_zold_img_action))
+        self.szinek = ((il.allo_kek_img, il.allo_kek_img_action), (il.allo_piros_img, il.allo_piros_img_action), (il.allo_sarga_img, il.allo_sarga_img_action), (il.allo_zold_img, il.allo_zold_img_action), (il.fekvo_kek_img, il.fekvo_kek_img_action), (il.fekvo_piros_img, il.fekvo_piros_img_action), (il.fekvo_sarga_img, il.fekvo_sarga_img_action), (il.fekvo_zold_img, il.fekvo_zold_img_action))
         self.make = True
         self.voices = honking
         self.play = False
         self.round = 0
+
+        self.pos_bonus = ((9, 9), (77, 9), (152, 77), (9, 152))
+        self.buttons = []
 
     def draw(self):
         modul_draw(self)
@@ -876,6 +855,7 @@ class LibaMondja:
             self.start = modulok[6].szamlalo.current_seconds - 2
             channelhonk.pause()
             self.gombok = [None, None, None, None]
+            self.buttons = []
 
             if spec_chart:
                 if self.honk == 1:
@@ -925,8 +905,7 @@ class LibaMondja:
                 if self.gombok[i] == None:
                     self.gombok[i] = r.randint(0,3)
 
-            self.pos_bonus = ((9, 9), (77, 9), (152, 77), (9, 152))
-            self.buttons = []
+
             for i in range(4):
                 if i % 2 == 0:
                     bonus = 0
@@ -1008,6 +987,18 @@ class LibaMondja:
                         self.done = True
                         self.make = False
 
+    def update(self):
+        self.scaling = global_scaling
+        self.pos = pos_order[self.index]
+        for i in range(4):
+            if i % 2 == 0:
+                bonus = 0
+
+            else:
+                bonus = 4
+
+            self.buttons[i] = Button(self.pos[0]+self.pos_bonus[i][0]*self.scaling, self.pos[1]+self.pos_bonus[i][1]*self.scaling, self.szinek[self.gombok[i]+bonus][0], self.scaling)
+
 
 class Idozito:
     def __init__(self, index:int, image:pygame.surface.Surface, pos:tuple=(0, 0), done:bool=True, scaling:float|int = 1) -> None:
@@ -1041,6 +1032,34 @@ class Idozito:
         cooldown = pygame.Rect(self.pos[0]+27*self.scaling, self.pos[1]+27*self.scaling, 40*(self.szamlalo.current_seconds%5)*self.scaling+10*self.scaling, 13*self.scaling)
         pygame.draw.rect(screen, color, cooldown)
 
+    def update(self):
+        self.scaling = global_scaling
+        self.pos = (0, 0)
+
+
+def egyeb_pos(scaling):
+    pos_list = []
+    for i in range(4):
+        if i == 1 or i == 3:
+            x_bonus = 399*scaling
+
+        else:
+            x_bonus = 0
+
+        if i >= 2:
+            y_bonus = 681*scaling
+
+        else:
+            y_bonus = 0
+
+        pos_list.append((bomb_pos_x+225*scaling+x_bonus, bomb_pos_y+3*scaling+y_bonus))
+
+    return pos_list
+
+def egyeb_matrica(self):
+    self.matrica_buttons = []
+    for i in range(len(self.current_matrica)):
+            self.matrica_buttons.append(Button(self.pos_list[self.current_matrica[i][0]][0], self.pos_list[self.current_matrica[i][0]][1], self.current_matrica[i][1], self.scaling))
 
 class Egyebek:
     def __init__(self, elem, matrica, scaling:float|int = 1) -> None:
@@ -1048,47 +1067,32 @@ class Egyebek:
         self.elemek = elem
         self.matricak = matrica
 
-        self.kijelolve = (szeriaszam_kijelolve, matrica_fel_kijelolve, matrica_le_kijelolve, matrica_le_kijelolve)
+        self.kijelolve = (il.szeriaszam_kijelolve, il.matrica_fel_kijelolve, il.matrica_le_kijelolve, il.matrica_le_kijelolve)
 
-        self.pos_list = []
-        for i in range(len(self.kijelolve)):
-            if i == 1 or i == 3:
-                x_bonus = 399*self.scaling
-
-            else:
-                x_bonus = 0
-
-            if i >= 2:
-                y_bonus = 681*self.scaling
-
-            else:
-                y_bonus = 0
-
-            self.pos_list.append((bomb_pos_x+225*self.scaling+x_bonus, bomb_pos_y+3*self.scaling+y_bonus))
+        self.pos_list = egyeb_pos(self.scaling)
 
         r_index = []
         for i in range(len(self.matricak)):
             r_index.append(i+1)
 
-        self.nagy_matricak = (nagy_szeria_matrica_img, nagy_feher_matrica_img, nagy_narancs_matrica_img, nagy_fekete_matrica_img)
-        self.current_matrica= [(0, szeriaszam_img, 0)]
+        self.nagy_matricak = (il.nagy_szeria_matrica_img, il.nagy_feher_matrica_img, il.nagy_narancs_matrica_img, il.nagy_fekete_matrica_img)
+        self.current_matrica= [(0, il.szeriaszam_img, 0)]
 
         for i in range(len(self.matricak)):
             if self.matricak[i]:
                 rand_i = r.randint(0, len(r_index)-1)
                 if r_index[rand_i] == 1:
-                    image = matrica_fel_img
+                    image = il.matrica_fel_img
                 else:
-                    image = matrica_le_img
+                    image = il.matrica_le_img
 
                 self.current_matrica.append((r_index[rand_i], image, i+1))
                 del r_index[rand_i]
 
         self.matrica_buttons = []
-        for i in range(len(self.current_matrica)):
-            self.matrica_buttons.append(Button(self.pos_list[self.current_matrica[i][0]][0], self.pos_list[self.current_matrica[i][0]][1], self.current_matrica[i][1], self.scaling))
+        egyeb_matrica(self)
 
-        self.elemek_img = (elem_bal_img, elem_jobb_img)
+        self.elemek_img = (il.elem_bal_img, il.elem_jobb_img)
 
     def draw(self):
         global scaling, scaling_index
@@ -1115,165 +1119,31 @@ class Egyebek:
 
                 Image(bomb_pos_x*self.scaling+x_bonus, bomb_pos_y+130*self.scaling+y_bonus, self.elemek_img[i//2], self.scaling)
 
+    def update(self):
+        self.scaling = global_scaling
 
-# Betöltés
+        self.pos_list = egyeb_pos(self.scaling)
+        egyeb_matrica(self)
 
-background_img = pygame.image.load("Backs/background.png").convert_alpha()
-start_background_img = pygame.image.load("Backs/start.png").convert_alpha()
-
-resume_img = pygame.image.load("Buttons/resume_button.png").convert_alpha()
-resume_le = pygame.image.load("Buttons/resume_button_le.png").convert_alpha()
-quit_img = pygame.image.load("Buttons/quit_button.png").convert_alpha()
-quit_le = pygame.image.load("Buttons/quit_button_le.png").convert_alpha()
-start_img = pygame.image.load("Buttons/start_button.png").convert_alpha()
-start_le = pygame.image.load("Buttons/start_button_le.png").convert_alpha()
-back_img = pygame.image.load("Buttons/back_button.png").convert_alpha()
-back_le = pygame.image.load("Buttons/back_button_le.png").convert_alpha()
-sz1_img = pygame.image.load("Buttons/1_button.png").convert_alpha()
-sz1_le = pygame.image.load("Buttons/1_button_le.png").convert_alpha()
-sz2_img = pygame.image.load("Buttons/2_button.png").convert_alpha()
-sz2_le = pygame.image.load("Buttons/2_button_le.png").convert_alpha()
-sz3_img = pygame.image.load("Buttons/3_button.png").convert_alpha()
-sz3_le = pygame.image.load("Buttons/3_button_le.png").convert_alpha()
-sz4_img = pygame.image.load("Buttons/4_button.png").convert_alpha()
-sz4_le = pygame.image.load("Buttons/4_button_le.png").convert_alpha()
-left_img = pygame.image.load("Buttons/balra.png").convert_alpha()
-left_kijelolve = pygame.image.load("Buttons/balra_kijelolve.png").convert_alpha()
-right_img = pygame.image.load("Buttons/jobbra.png").convert_alpha()
-right_kijelolve = pygame.image.load("Buttons/jobbra_kijelolve.png").convert_alpha()
-
-bomba_img = pygame.image.load("Backs/bomba_alap.png").convert_alpha()
-
-sima_drot_modul_img = pygame.image.load("nat_drotok/drot_nat_224x224.png").convert_alpha()
-
-fekete_drot_img = pygame.image.load("nat_drotok/fekete/fekete_alap.png").convert_alpha()
-fekete_drot_action = (pygame.image.load("nat_drotok/fekete/fekete_kijelolve.png").convert_alpha(),
-                      pygame.image.load("nat_drotok/fekete/fekete_vagas.png").convert_alpha(),
-                      pygame.image.load("nat_drotok/fekete/fekete_kesz.png").convert_alpha())
-kek_drot_img = pygame.image.load("nat_drotok/kek/kek_alap.png").convert_alpha()
-kek_drot_action = (pygame.image.load("nat_drotok/kek/kek_kijelolve.png").convert_alpha(),
-                   pygame.image.load("nat_drotok/kek/kek_vagas.png").convert_alpha(),
-                   pygame.image.load("nat_drotok/kek/kek_kesz.png").convert_alpha())
-piros_drot_img = pygame.image.load("nat_drotok/piros/piros_alap.png").convert_alpha()
-piros_drot_action = (pygame.image.load("nat_drotok/piros/piros_kijelolve.png").convert_alpha(),
-                     pygame.image.load("nat_drotok/piros/piros_vagas.png").convert_alpha(),
-                     pygame.image.load("nat_drotok/piros/piros_kesz.png").convert_alpha())
-sarga_drot_img = pygame.image.load("nat_drotok/sarga/sarga_alap.png").convert_alpha()
-sarga_drot_action = (pygame.image.load("nat_drotok/sarga/sarga_kijelolve.png").convert_alpha(),
-                     pygame.image.load("nat_drotok/sarga/sarga_vagas.png").convert_alpha(),
-                     pygame.image.load("nat_drotok/sarga/sarga_kesz.png").convert_alpha())
-
-komplex_kabel_modul_img = pygame.image.load("kom_kabel/kabel_kom_224x224.png").convert_alpha()
-
-kabel_1_img = pygame.image.load("kom_kabel/1_kabel/1_alap.png").convert_alpha()
-kabel_1_action = (pygame.image.load("kom_kabel/1_kabel/1_kijelolve.png").convert_alpha(),
-                  pygame.image.load("kom_kabel/1_kabel/1_vagas.png").convert_alpha(),
-                  pygame.image.load("kom_kabel/1_kabel/1_kesz.png").convert_alpha())
-kabel_2_img = pygame.image.load("kom_kabel/2_kabel/2_alap.png").convert_alpha()
-kabel_2_action = (pygame.image.load("kom_kabel/2_kabel/2_kijelolve.png").convert_alpha(),
-                  pygame.image.load("kom_kabel/2_kabel/2_vagas.png").convert_alpha(),
-                  pygame.image.load("kom_kabel/2_kabel/2_kesz.png").convert_alpha())
-kabel_3_img = pygame.image.load("kom_kabel/3_kabel/3_alap.png").convert_alpha()
-kabel_3_action = (pygame.image.load("kom_kabel/3_kabel/3_kijelolve.png").convert_alpha(),
-                  pygame.image.load("kom_kabel/3_kabel/3_vagas.png").convert_alpha(),
-                  pygame.image.load("kom_kabel/3_kabel/3_kesz.png").convert_alpha())
-kabel_4_img = pygame.image.load("kom_kabel/4_kabel/4_alap.png").convert_alpha()
-kabel_4_action = (pygame.image.load("kom_kabel/4_kabel/4_kijelolve.png").convert_alpha(),
-                  pygame.image.load("kom_kabel/4_kabel/4_vagas.png").convert_alpha(),
-                  pygame.image.load("kom_kabel/4_kabel/4_kesz.png").convert_alpha())
-
-gomb_modul_img = pygame.image.load("gomb_modul/gomb_alap_224x224.png").convert_alpha()
-
-kek_gomb_img = pygame.image.load("gomb_modul/kek/kek_sima.png").convert_alpha()
-kek_gomb_action = (pygame.image.load("gomb_modul/kek/kek_kijelol.png").convert_alpha(),
-                   pygame.image.load("gomb_modul/kek/kek_benyomva.png").convert_alpha(),
-                   pygame.image.load("gomb_modul/kek/kek_kesz.png").convert_alpha())
-piros_gomb_img = pygame.image.load("gomb_modul/piros/piros_sima.png").convert_alpha()
-piros_gomb_action = (pygame.image.load("gomb_modul/piros/piros_kijelol.png").convert_alpha(),
-                     pygame.image.load("gomb_modul/piros/piros_benyomva.png").convert_alpha(),
-                     pygame.image.load("gomb_modul/piros/piros_kesz.png").convert_alpha())
-zold_gomb_img = pygame.image.load("gomb_modul/zold/zold_sima.png").convert_alpha()
-zold_gomb_action = (pygame.image.load("gomb_modul/zold/zold_kijelol.png").convert_alpha(),
-                    pygame.image.load("gomb_modul/zold/zold_benyomva.png").convert_alpha(),
-                    pygame.image.load("gomb_modul/zold/zold_kesz.png").convert_alpha())
-
-lud_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_lud.png").convert_alpha()
-talp_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_talp.png").convert_alpha()
-tojas_szimbolum = pygame.image.load("gomb_modul/szimbolumok/minta_tojas.png").convert_alpha()
-
-kerdes_modul_img = pygame.image.load("kerdesek/kerdesek_panel.png").convert_alpha()
-
-a_gomb_img = pygame.image.load("kerdesek/A/a_alap.png").convert_alpha()
-a_gomb_action = (pygame.image.load("kerdesek/A/a_kijelol.png").convert_alpha(), pygame.image.load("kerdesek/A/a_benyom.png").convert_alpha())
-b_gomb_img = pygame.image.load("kerdesek/B/b_alap.png").convert_alpha()
-b_gomb_action = (pygame.image.load("kerdesek/B/b_kijelol.png").convert_alpha(), pygame.image.load("kerdesek/B/b_benyom.png").convert_alpha())
-c_gomb_img = pygame.image.load("kerdesek/C/c_alap.png").convert_alpha()
-c_gomb_action = (pygame.image.load("kerdesek/C/c_kijelol.png").convert_alpha(), pygame.image.load("kerdesek/C/c_benyom.png").convert_alpha())
-d_gomb_img = pygame.image.load("kerdesek/D/d_alap.png").convert_alpha()
-d_gomb_action = (pygame.image.load("kerdesek/D/d_kijelol.png").convert_alpha(), pygame.image.load("kerdesek/D/d_benyom.png").convert_alpha())
-
-progress_0_img = pygame.image.load("kerdesek/allapot/progress_0.png").convert_alpha()
-progress_1_img = pygame.image.load("kerdesek/allapot/progress_1.png").convert_alpha()
-progress_2_img = pygame.image.load("kerdesek/allapot/progress_2.png").convert_alpha()
-progress_3_img = pygame.image.load("kerdesek/allapot/progress_3.png").convert_alpha()
-progress_4_img = pygame.image.load("kerdesek/allapot/progress_4.png").convert_alpha()
-
-jelszo_modul_img = pygame.image.load("jelszo/jelszo_modul.png").convert_alpha()
-
-lud_mondja_modul_img = pygame.image.load("simon/szines.png").convert_alpha()
-
-allo_kek_img = pygame.image.load("simon/allo/alap_kek_allo.png").convert_alpha()
-allo_kek_img_action = (pygame.image.load("simon/allo/kijelolt_kek_allo.png").convert_alpha(), pygame.image.load("simon/allo/benyom_kek_allo.png").convert_alpha())
-allo_piros_img = pygame.image.load("simon/allo/alap_piros_allo.png").convert_alpha()
-allo_piros_img_action = (pygame.image.load("simon/allo/kijelolt_piros_allo.png").convert_alpha(), pygame.image.load("simon/allo/benyom_piros_allo.png").convert_alpha())
-allo_sarga_img = pygame.image.load("simon/allo/alap_sarga_allo.png").convert_alpha()
-allo_sarga_img_action = (pygame.image.load("simon/allo/kijelolt_sarga_allo.png").convert_alpha(), pygame.image.load("simon/allo/benyom_sarga_allo.png").convert_alpha())
-allo_zold_img = pygame.image.load("simon/allo/alap_zold_allo.png").convert_alpha()
-allo_zold_img_action = (pygame.image.load("simon/allo/kijelolt_zold_allo.png").convert_alpha(), pygame.image.load("simon/allo/benyom_zold_allo.png").convert_alpha())
-
-fekvo_kek_img = pygame.image.load("simon/fekvo/alap_kek_fekvo.png").convert_alpha()
-fekvo_kek_img_action = (pygame.image.load("simon/fekvo/kijelolt_kek_fekvo.png").convert_alpha(), pygame.image.load("simon/fekvo/benyom_kek_fekvo.png").convert_alpha())
-fekvo_piros_img = pygame.image.load("simon/fekvo/alap_piros_fekvo.png").convert_alpha()
-fekvo_piros_img_action = (pygame.image.load("simon/fekvo/kijelolt_piros_fekvo.png").convert_alpha(), pygame.image.load("simon/fekvo/benyom_piros_fekvo.png").convert_alpha())
-fekvo_sarga_img = pygame.image.load("simon/fekvo/alap_sarga_fekvo.png").convert_alpha()
-fekvo_sarga_img_action = (pygame.image.load("simon/fekvo/kijelolt_sarga_fekvo.png").convert_alpha(), pygame.image.load("simon/fekvo/benyom_sarga_fekvo.png").convert_alpha())
-fekvo_zold_img = pygame.image.load("simon/fekvo/alap_zold_fekvo.png").convert_alpha()
-fekvo_zold_img_action = (pygame.image.load("simon/fekvo/kijelolt_zold_fekvo.png").convert_alpha(), pygame.image.load("simon/fekvo/benyom_zold_fekvo.png").convert_alpha())
-
-visszaszamlalo_img = pygame.image.load("idozito/idozito.png").convert_alpha()
-
-szeriaszam_img = pygame.image.load("egyeb/matricak_alap/szeria_alap.png").convert_alpha()
-szeriaszam_kijelolve = pygame.image.load("egyeb/matricak_alap/szeria_alap_kijelolve.png").convert_alpha()
-
-nagy_szeria_matrica_img = pygame.image.load("egyeb/matricak_nagyitva/szeria_nagyitva.png").convert_alpha()
-
-matrica_fel_img = pygame.image.load("egyeb/matricak_alap/matrica_fel.png").convert_alpha()
-matrica_fel_kijelolve = pygame.image.load("egyeb/matricak_alap/matrica_fel_kijelolve.png").convert_alpha()
-matrica_le_img = pygame.image.load("egyeb/matricak_alap/matrica_le.png").convert_alpha()
-matrica_le_kijelolve = pygame.image.load("egyeb/matricak_alap/matrica_le_kijelolve.png").convert_alpha()
-
-nagy_feher_matrica_img = pygame.image.load("egyeb/matricak_nagyitva/feher.png").convert_alpha()
-nagy_fekete_matrica_img = pygame.image.load("egyeb/matricak_nagyitva/fekete.png").convert_alpha()
-nagy_narancs_matrica_img = pygame.image.load("egyeb/matricak_nagyitva/narancs.png").convert_alpha()
-
-elem_jobb_img = pygame.image.load("egyeb/elemek/elem_jobb.png").convert_alpha()
-elem_bal_img = pygame.image.load("egyeb/elemek/elem_bal.png").convert_alpha()
-
-jel_alap = pygame.image.load("Jelzok/alap_keret.png").convert_alpha()
-jel_kijel = pygame.image.load("Jelzok/kijelol_keret.png").convert_alpha()
-# jel_kat = pygame.image.load("Jelzok/kat_keret.png").convert_alpha()
-jel_kesz = pygame.image.load("Jelzok/kesz_keret.png").convert_alpha()
-
-jelek = (jel_alap, jel_kijel, jel_kesz)
-
+#Betöltések
 explosion_sound = pygame.mixer.Sound("Hangok/explosion.mp3")
 honk_1 = pygame.mixer.Sound("Hangok/1_honking.mp3")
 honk_2 = pygame.mixer.Sound("Hangok/2_honking.mp3")
 honk_3 = pygame.mixer.Sound("Hangok/3_honking.mp3")
 honk_4 = pygame.mixer.Sound("Hangok/4_honking.mp3")
 honking = (honk_1, honk_2, honk_3, honk_4)
-# honk_1.play()
 
+
+def change_image(x: int, y: int, images: tuple[pygame.surface.Surface], scale: float|int = 1, close: bool = None):
+    pos = pygame.mouse.get_pos()
+
+    alap = Image(x, y, images[0], scale)
+
+    if close is not None and len(images) > 2 and close:
+        Image(x, y, images[2], scale)
+
+    elif alap.rect.collidepoint(pos):
+        Image(x, y, images[1], scale)
 
 def generate_bomb():
     # Változok
@@ -1292,34 +1162,8 @@ def generate_bomb():
     jellem = Egyebek(elemek, matricak)
 
     #0: SimaDrót; 1: KomplexKábel; 2: Gomb; 3: Jelszó; 4: Libamondja; 5: Kérdés; 6: Idözítő
-    return(SimaDrot(None, sima_drot_modul_img, scaling=global_scaling), KomplexKabel(None, komplex_kabel_modul_img, scaling=global_scaling), Gomb(None, gomb_modul_img, scaling=global_scaling), Jelszo(None, jelszo_modul_img, scaling=global_scaling), LibaMondja(None, lud_mondja_modul_img, scaling=global_scaling), Kerdes(None, kerdes_modul_img, scaling=global_scaling), Idozito(None, visszaszamlalo_img, scaling=global_scaling))
+    return(SimaDrot(None, il.sima_drot_modul_img, scaling=global_scaling), KomplexKabel(None, il.komplex_kabel_modul_img, scaling=global_scaling), Gomb(None, il.gomb_modul_img, scaling=global_scaling), Jelszo(None, il.jelszo_modul_img, scaling=global_scaling), LibaMondja(None, il.lud_mondja_modul_img, scaling=global_scaling), Kerdes(None, il.kerdes_modul_img, scaling=global_scaling), Idozito(None, il.visszaszamlalo_img, scaling=global_scaling))
 
-
-def test_write():
-    print("Szériaszám: "+szeria_root[0])
-
-    bal = 0
-    jobb = 0
-    for i in range(len(elemek)):
-        if True == elemek[i]:
-            if i < 2:
-                bal += 1
-
-            else:
-                jobb += 1
-    print(f"Elemek: bal:{bal}; jobb:{jobb}")
-
-    print("Matricák:")
-    for i in range(len(matricak)):
-        if True == matricak[i]:
-            if i == 0:
-                print("-fehér")
-
-            elif i == 1:
-                print("-narancssárga")
-
-            else:
-                print("-fekete")
 
 # a modulok szét szórása
 def random_pos_modul(modulok:list, not_use:list):
@@ -1333,46 +1177,20 @@ def random_pos_modul(modulok:list, not_use:list):
             modulok[i].index = r_list[rand_index]
             del r_list[rand_index]
 
-
 def modul_draw(self):
     """
     kirajzolja a modult, figyelembe veszi hogy kész van-e?
     """
-    global modul_kesz, global_scaling, pos_order, jelek
+    global modul_kesz, global_scaling, pos_order
 
     modul_kesz[self.index] = self.done
 
-    if self.index is not None:
+    if self.pos == (0, 0) and self.index is not None:
         self.pos = pos_order[self.index]
 
 
     screen.blit(self.image, self.pos)
-    change_image(self.pos[0] + 1, self.pos[1] + 1, jelek, global_scaling, self.done)
-
-# Szöveg
-
-family = "Grand9K Pixel.ttf"
-font = pygame.font.Font(family, 36) #õ -> ő
-
-def text_draw(text, x, y, color=(255,255,255), font=font):
-    img = font.render(text, True, color)
-    screen.blit(img,(x,y))
-
-def display_text(text, pos, width=800, font=font, color=(255,255,255)):
-    collection = [word.split(' ') for word in text.splitlines()]
-    space = font.size(' ')[0]
-    x,y = pos
-    for lines in collection:
-        for words in lines:
-            word_surface = font.render(words, True, color)
-            word_width , word_height = word_surface.get_size()
-            if x + word_width >= width:
-                x = pos[0]
-                y += word_height
-            screen.blit(word_surface, (x,y))
-            x += word_width + space
-        x = pos[0]
-        y += word_height
+    change_image(self.pos[0] + 1, self.pos[1] + 1, il.jelek, global_scaling, self.done)
 
 # megcsinálja az eredmenyek mappát
 try:
@@ -1470,34 +1288,34 @@ while True:
         screen.fill((120, 120, 120))
         if scaling:
 
-            Image(0, 0 , background_img, screen_x)
+            Image(0, 0 , il.background_img, screen_x)
             Image(bomb_pos_x+137*global_scaling, bomb_pos_y+162*global_scaling, jellem.nagy_matricak[jellem.current_matrica[scaling_index][2]], global_scaling)
 
             if jellem.current_matrica[scaling_index][2] == 0:
                 text_draw(szeria_root[0], bomb_pos_x+254*global_scaling, bomb_pos_y+340*global_scaling, (255,255,255), pygame.font.Font(family, 100*global_scaling))
 
             if len(jellem.current_matrica) != 1:
-                if left_button.pos_button_draw(left_kijelolve):
+                if left_button.pos_button_draw(il.left_kijelolve):
                     if scaling_index - 1 == -1:
                         scaling_index = len(jellem.current_matrica)-1
 
                     else:
                         scaling_index -= 1
 
-                if right_button.pos_button_draw(right_kijelolve):
+                if right_button.pos_button_draw(il.right_kijelolve):
                     if scaling_index + 1 == len(jellem.current_matrica):
                         scaling_index = 0
 
                     else:
                         scaling_index += 1
 
-            if back_button.puss_button_draw(back_le):
+            if back_button.puss_button_draw(il.back_le):
                 scaling = False
                 modulok[4].start = modulok[6].szamlalo.current_seconds - 1
 
         else:
             # 141, 25
-            Image(bomb_pos_x+25*global_scaling, bomb_pos_y+10*global_scaling, bomba_img, global_scaling)
+            Image(bomb_pos_x+25*global_scaling, bomb_pos_y+10*global_scaling, il.bomba_img, global_scaling)
 
             for i in range(len(modulok)):
                 if (len(modulok)-1)-i not in not_use_m:
@@ -1533,15 +1351,15 @@ while True:
 
     elif start_page:
         screen.fill((30, 17, 34))
-        Image(bomb_pos_x, bomb_pos_y, start_background_img, global_scaling)
+        Image(bomb_pos_x, bomb_pos_y, il.start_background_img, global_scaling)
 
         csapat_input.input_draw(5, -2)
 
-        if start_button.puss_button_draw(start_le):
+        if start_button.puss_button_draw(il.start_le):
             if csapat_input.buffer != "":
 
                 modulok = generate_bomb()
-                test_write()
+                f.test_write(szeria_root[0], elemek, matricak)
 
                 modul_kesz = []
                 for _ in range(len(modulok)):
@@ -1575,16 +1393,16 @@ while True:
         if hiba and csapat_input.buffer == "":
             text_draw("Nem adtad még meg az osztályt!", 450*global_scaling, 180*global_scaling, (255, 0, 0), pygame.font.Font(family, 20*global_scaling))
 
-        if sz1_button.puss_button_draw(sz1_le, szintek[0]):
+        if sz1_button.puss_button_draw(il.sz1_le, szintek[0]):
             szintek = [True, False, False, False]
 
-        if sz2_button.puss_button_draw(sz2_le, szintek[1]):
+        if sz2_button.puss_button_draw(il.sz2_le, szintek[1]):
             szintek = [False, True, False, False]
 
-        if sz3_button.puss_button_draw(sz3_le, szintek[2]):
+        if sz3_button.puss_button_draw(il.sz3_le, szintek[2]):
             szintek = [False, False, True, False]
 
-        if sz4_button.puss_button_draw(sz4_le, szintek[3]):
+        if sz4_button.puss_button_draw(il.sz4_le, szintek[3]):
             szintek = [False, False, False, True]
 
         for event in pygame.event.get():
@@ -1603,13 +1421,13 @@ while True:
 
     elif menu:
         screen.fill((30, 17, 34))
-        Image(bomb_pos_x, bomb_pos_y, start_background_img, global_scaling)
-        Image(0, 0, background_img, screen_x)
+        Image(bomb_pos_x, bomb_pos_y, il.start_background_img, global_scaling)
+        Image(0, 0, il.background_img, screen_x)
 
-        if quit_button.puss_button_draw(quit_le):
+        if quit_button.puss_button_draw(il.quit_le):
             break
 
-        if resume_button.puss_button_draw(resume_le):
+        if resume_button.puss_button_draw(il.resume_le):
             menu = False
 
             if running:
@@ -1643,15 +1461,15 @@ while True:
 
     elif end_page:
         screen.fill((30, 17, 34))
-        Image(bomb_pos_x, bomb_pos_y, start_background_img, global_scaling)
-        Image(0, 0, background_img, screen_x, False)
+        Image(bomb_pos_x, bomb_pos_y, il.start_background_img, global_scaling)
+        Image(0, 0, il.background_img, screen_x, False)
         text_draw("Játék vége!", screen_x/2-120*global_scaling, screen_y/2-200*global_scaling)
         text_draw(f"Idõ: {modulok[6].szamlalo.current_seconds} másodperc",screen_x/2-180*global_scaling, screen_y/2-100*global_scaling)
         text_draw(f"Pontszám: {check_kesz_modulok_szama()-1}", screen_x/2-120*global_scaling, screen_y/2*global_scaling)
         if explosion:
             text_draw("Felrobbantál!", screen_x/2-120*global_scaling, screen_y/2+100*global_scaling)
 
-        if back_button.puss_button_draw(back_le):
+        if back_button.puss_button_draw(il.back_le):
             end_page = False
             start_page = True
 
