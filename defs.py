@@ -134,7 +134,7 @@ def password() -> tuple[str, list[list[str]]]:
 
 
 #8 karakter a szériaszám ebböl 4 szám 4 betű
-def szerianumber(spec:bool) -> str:
+def szerianumber(spec:bool) -> tuple[str, int]:
     sz_n = ""
     letters = ["s", "o", "x", "h", "a", "i", "d", "z", "t", "l"]
     spec_chart = ["+", "<", "@", "&", "#", "$"]
