@@ -1,10 +1,11 @@
 import pygame
 import random as r
-import img_load as il
-import common as c
+import Moduls.img_load as il
+import Moduls.common as c
 
-class Kerdes:
-    def __init__(self, index:int, image:pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+class Panel:
+    def __init__(self, index:int = None, image:pygame.surface.Surface = il.kerdes_modul_img, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+        self.id = "kerdes"
         self.pos = pos
         self.scaling = scaling
         self.index = index

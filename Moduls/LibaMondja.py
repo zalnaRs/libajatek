@@ -1,16 +1,11 @@
 import pygame
 import random as r
-import img_load as il
-import common as c
+import Moduls.img_load as il
+import Moduls.common as c
 
-honk_1 = pygame.mixer.Sound("Assets/Hangok/1_hapog.mp3")
-honk_2 = pygame.mixer.Sound("Assets/Hangok/2_hapog.mp3")
-honk_3 = pygame.mixer.Sound("Assets/Hangok/3_hapog.mp3")
-honk_4 = pygame.mixer.Sound("Assets/Hangok/4_hapog.mp3")
-honking = (honk_1, honk_2, honk_3, honk_4)
-
-class LibaMondja:
-    def __init__(self, index:int, image:pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+class Panel:
+    def __init__(self, index:int = None, image:pygame.surface.Surface = il.lib_mondja_modul_img, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+        self.id = "lib_mondja"
         self.pos = pos
         self.scaling = scaling
         self.index = index
@@ -18,12 +13,25 @@ class LibaMondja:
         self.done = done
         self.mistake = False
 
+        honk_1 = pygame.mixer.Sound("Assets/Hangok/1_hapog.mp3")
+        honk_2 = pygame.mixer.Sound("Assets/Hangok/2_hapog.mp3")
+        honk_3 = pygame.mixer.Sound("Assets/Hangok/3_hapog.mp3")
+        honk_4 = pygame.mixer.Sound("Assets/Hangok/4_hapog.mp3")
+        honking = (honk_1, honk_2, honk_3, honk_4)
+
         # 0-3: allo; 4-7: fekvo
         # 0: kék; 1: piros; 2: sárga; 3: zöld
-        self.szinek = ((il.allo_kek_img, il.allo_kek_img_action), (il.allo_piros_img, il.allo_piros_img_action), (il.allo_sarga_img, il.allo_sarga_img_action), (il.allo_zold_img, il.allo_zold_img_action), (il.fekvo_kek_img, il.fekvo_kek_img_action), (il.fekvo_piros_img, il.fekvo_piros_img_action), (il.fekvo_sarga_img, il.fekvo_sarga_img_action), (il.fekvo_zold_img, il.fekvo_zold_img_action))
+        self.szinek = ((il.allo_kek_img, il.allo_kek_img_action),
+                       (il.allo_piros_img, il.allo_piros_img_action),
+                       (il.allo_sarga_img, il.allo_sarga_img_action),
+                       (il.allo_zold_img, il.allo_zold_img_action),
+                       (il.fekvo_kek_img, il.fekvo_kek_img_action),
+                       (il.fekvo_piros_img, il.fekvo_piros_img_action),
+                       (il.fekvo_sarga_img, il.fekvo_sarga_img_action),
+                       (il.fekvo_zold_img, il.fekvo_zold_img_action))
         self.make = True
         self.voices = honking
-        self.play = False
+        self.played = True
         self.round = 0
 
         self.pos_bonus = ((9, 9), (77, 9), (152, 77), (9, 152))
@@ -111,14 +119,14 @@ class LibaMondja:
                 c.Image(self.buttons[i].rect.x, self.buttons[i].rect.y, self.szinek[self.gombok[i]+plus][0], self.scaling)
         
         else:
-            if self.start == timer.szamlalo.current_seconds:
-                if not self.play:
+            if self.start >= timer.szamlalo.current_seconds:
+                if not self.played:
                     self.start = timer.szamlalo.current_seconds-(self.honk+2)
                     c.channelhonk.play(self.voices[self.honk-1])
-                    self.play = True
+                    self.played = True
 
             else:
-                self.play = False
+                self.played = False
 
             for i in range(len(self.buttons)):
                 if i % 2 == 0:
@@ -170,6 +178,13 @@ class LibaMondja:
                     if self.round == 4:
                         self.done = True
                         self.make = False
+
+    def make_sound(self, timer):
+        if self.start >= timer.szamlalo.current_seconds:
+            if not self.played:
+                self.start = timer.szamlalo.current_seconds-(self.honk+2)
+                c.channelhonk.play(self.voices[self.honk-1])
+                self.played = True
 
     def update(self):
         self.scaling = c.g_scale

@@ -1,10 +1,12 @@
 import pygame
 import random as r
-import img_load as il
-import common as c
+import Moduls.img_load as il
+import Moduls.common as c
+import Moduls.defs as f
 
-class KomplexKabel:
-    def __init__(self, index: int, image: pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+class Panel:
+    def __init__(self, index: int = None, image: pygame.surface.Surface = il.kom_kabel_modul_img, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+        self.id = "kom_kabel"
         self.pos = pos
         self.scaling = scaling
         self.index = index
@@ -37,14 +39,14 @@ class KomplexKabel:
         if c.szeria_root[1] == 3 or c.szeria_root[1] == 9:
             self.cut_them.append(2)
 
-        elif c.szeria_root[1] == 4:
+        elif c.szeria_root[1] == 1:
             self.cut_them.append(3)
 
-        elif c.stickers[2] or c.szeria_root[1] == 8:
+        elif c.stickers[2] or c.szeria_root[1] % 2 == 0:
             self.cut_them.append(3)
 
         else:
-            if True not in c.cells:
+            if c.cells[0:2] == [False, False]:
                 self.feher = 4
 
             if not c.stickers[0]:
@@ -68,16 +70,11 @@ class KomplexKabel:
                 self.feher = 4
 
         if self.feher == 4:
-            if c.szeria_root[1] < 5:
-                current_root = c.szeria_root[1] + 5
 
-            else:
-                current_root = c.szeria_root[1]
-
-            if current_root == 5:
+            if c.szeria_root[1] == 5:
                 self.cut_them.append(5)
 
-            elif current_root == 6:
+            elif c.szeria_root[1] == 6:
                 self.cut_them.append(1)
 
     def draw(self, timer = None):

@@ -1,5 +1,5 @@
 import pygame
-import defs as f
+import Moduls.defs as f
 import random as r
 
 logo = pygame.image.load("logo_32x32.png")
@@ -17,11 +17,7 @@ pygame.display.set_caption("Keep Honking and Nobody Explodes")
 clock = pygame.time.Clock()
 pygame.time.set_timer(pygame.USEREVENT, 1000)
 
-import img_load as il
-
-modul_kesz = []
-for _ in range(6):#mivel csak hat hely van a bonbán
-    modul_kesz.append(None)
+import Moduls.img_load as il
 
 
 #Szöveg stílus és kiíráshoz függ.
@@ -97,18 +93,6 @@ def generate_bomb():
 
 
 
-def random_pos_modul(moduls:list, not_use:list): # a modulok szét szórása
-    r_list = []
-    for i in range(6): #mivel csak hat hely van a bonbán
-        r_list.append(i)
-
-    for i in range(len(moduls)):
-        if i not in not_use:
-            rand_index = r.randint(0, len(r_list) - 1)
-            moduls[i].index = r_list[rand_index]
-            del r_list[rand_index]
-
-
 def change_image(x: int, y: int, images: tuple[pygame.surface.Surface], scaling: float|int = 1, close: bool = None): #Jelek amikkel jelöljük a bombák állapotát
     pos = pygame.mouse.get_pos()
 
@@ -122,9 +106,7 @@ def change_image(x: int, y: int, images: tuple[pygame.surface.Surface], scaling:
 
 
 def modul_draw(self): #kirajzolja a modult, figyelembe veszi hogy kész van-e
-    global modul_kesz, g_scale, pos_coordinate
-
-    modul_kesz[self.index] = self.done
+    global g_scale, pos_coordinate
 
     if self.pos == (0, 0) and self.index is not None:
         self.pos = pos_coordinate[self.index]

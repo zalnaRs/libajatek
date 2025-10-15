@@ -1,8 +1,10 @@
 import pygame
-import common as c
+import Moduls.common as c
+import Moduls.img_load as il
 
-class Idozito:
-    def __init__(self, index:int, image:pygame.surface.Surface, pos:tuple=(0, 0), done:bool=True, scaling:float|int = 1) -> None:
+class Panel:
+    def __init__(self, index:int = None, image:pygame.surface.Surface = il.idozito_modul_img, pos:tuple=(0, 0), done:bool=True, scaling:float|int = 1) -> None:
+        self.id = "idozito"
         self.pos = pos
         self.scaling = scaling
         self.index = index
@@ -42,4 +44,3 @@ class Idozito:
     def update(self):
         self.scaling = c.g_scale
         self.pos = (0, 0)
-

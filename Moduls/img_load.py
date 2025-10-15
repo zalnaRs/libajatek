@@ -32,7 +32,7 @@ bomb_img = image.load("Assets/Hatter/bomba_alap.png").convert_alpha()
 
 #Sima drótok modul elmei
 
-s_drot_modul_img = image.load("Assets/modul_drotok/sima_drotok_224x224.png").convert_alpha()
+sim_drot_modul_img = image.load("Assets/modul_drotok/sima_drotok_224x224.png").convert_alpha()
 
 fekete_drot_img = image.load("Assets/modul_drotok/fekete/fekete_alap.png").convert_alpha()
 fekete_drot_action = (image.load("Assets/modul_drotok/fekete/fekete_kijelolve.png").convert_alpha(), image.load("Assets/modul_drotok/fekete/fekete_vagas.png").convert_alpha(), image.load("Assets/modul_drotok/fekete/fekete_kesz.png").convert_alpha())
@@ -45,7 +45,7 @@ sarga_drot_action = (image.load("Assets/modul_drotok/sarga/sarga_kijelolve.png")
 
 #Komplex kábelek modul elmei
 
-k_kabel_modul_img = image.load("Assets/modul_kabel/komplex_kabelek_224x224.png").convert_alpha()
+kom_kabel_modul_img = image.load("Assets/modul_kabel/komplex_kabelek_224x224.png").convert_alpha()
 
 kabel_1_img = image.load("Assets/modul_kabel/1_kabel/1_alap.png").convert_alpha()
 kabel_1_action = (image.load("Assets/modul_kabel/1_kabel/1_kijelolve.png").convert_alpha(), image.load("Assets/modul_kabel/1_kabel/1_vagas.png").convert_alpha(), image.load("Assets/modul_kabel/1_kabel/1_kesz.png").convert_alpha())
@@ -96,7 +96,7 @@ jelszo_modul_img = image.load("Assets/modul_jelszo/jelszo_224x224.png").convert_
 
 #Liba mondja modul elmei
 
-liba_m_modul_img = image.load("Assets/modul_libamondja/liba_mondja_224x224.png").convert_alpha()
+lib_mondja_modul_img = image.load("Assets/modul_libamondja/liba_mondja_224x224.png").convert_alpha()
 
 allo_kek_img = image.load("Assets/modul_libamondja/allo/alap_kek_allo.png").convert_alpha()
 allo_kek_img_action = (image.load("Assets/modul_libamondja/allo/kijelolt_kek_allo.png").convert_alpha(), image.load("Assets/modul_libamondja/allo/benyom_kek_allo.png").convert_alpha())

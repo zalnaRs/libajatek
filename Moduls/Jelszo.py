@@ -1,9 +1,11 @@
 import pygame
-import common as c
-import defs as f
+import Moduls.common as c
+import Moduls.defs as f
+import Moduls.img_load as il
 
-class Jelszo:
-    def __init__(self, index:int, image:pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+class Panel:
+    def __init__(self, index:int = None, image:pygame.surface.Surface = il.jelszo_modul_img, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+        self.id = "jelszo"
         self.pos = pos
         self.scaling = scaling
         self.index = index
@@ -25,7 +27,7 @@ class Jelszo:
 
         if make:
             self.rect = pygame.Rect(self.pos[0]+71*self.scaling, self.pos[1]+171*self.scaling, 82*self.scaling, 25*self.scaling)
-            self.input = c.Input(self.rect.x, self.rect.y, 82*self.scaling, 25*self.scaling, 16*self.scaling, self.update_list)
+            self.input = c.Input(self.rect.x, self.rect.y, 82*self.scaling, 25*self.scaling, 16*self.scaling, self.update_list, True)
             if self.buffer_save != "":
                 self.input.buffer = self.buffer_save
 

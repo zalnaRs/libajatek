@@ -1,7 +1,7 @@
 import pygame
 import random as r
-import img_load as il
-import common as c
+import Moduls.img_load as il
+import Moduls.common as c
 
 def On_the_Bomb_sticker(self):
     self.sticker_buttons = []

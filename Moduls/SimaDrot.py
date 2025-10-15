@@ -1,11 +1,12 @@
 import pygame
-import common as c
+import Moduls.common as c
 #Image, Button, Timer, Input, modul_draw, boom, g_scale, cells, stickers, szeria_root, spec_chart, properties, explosion
-import defs as f
-import img_load as il
+import Moduls.defs as f
+import Moduls.img_load as il
 
-class SimaDrot:
-    def __init__(self, index: int, image: pygame.surface.Surface, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+class Panel:
+    def __init__(self, index: int = None, image: pygame.surface.Surface = il.sim_drot_modul_img, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
+        self.id = "sim_drot"
         self.pos = pos
         self.scaling = scaling
         self.index = index
@@ -14,7 +15,9 @@ class SimaDrot:
         self.mistake = False
 
         self.colors = (
-        (il.fekete_drot_img, il.fekete_drot_action), (il.kek_drot_img, il.kek_drot_action), (il.piros_drot_img, il.piros_drot_action),
+        (il.fekete_drot_img, il.fekete_drot_action),
+        (il.kek_drot_img, il.kek_drot_action),
+        (il.piros_drot_img, il.piros_drot_action),
         (il.sarga_drot_img, il.sarga_drot_action))
         self.drotok = f.generate_drotok()
         self.animate_button = None
@@ -37,33 +40,32 @@ class SimaDrot:
                         sarga = False
                         break
 
-            if sarga:
-                if c.szeria_root[1] == 3:
-                    self.correct = 3
+        if sarga:
+            if c.szeria_root[1] == 3:
+                self.correct = 3
 
-                elif c.szeria_root[1] % 2 == 0 and c.stickers[2]:
-                    self.correct = 2
+            elif f.count(c.cells, True) >= 2 and c.stickers[2]:
+                self.correct = 2
 
-                elif c.szeria_root[1] % 2 == 1:
-                    self.correct = 3
+            elif c.szeria_root[1] % 2 == 1:
+                self.correct = 3
 
-                elif c.stickers[1]:
-                    self.correct = 1
+            elif not c.stickers[1]:
+                self.correct = 1
 
-                else:
-                    if c.szeria_root[1] / 2 + 7 == 8:
-                        self.correct = 0
+            elif c.szeria_root[1] / 2 + 7 == 8:
+                self.correct = 0
 
-                    elif c.szeria_root[1] / 2 + 7 == 9:
-                        self.correct = 2
+            elif c.szeria_root[1] / 2 + 7 == 9:
+                self.correct = 2
 
-                    elif c.szeria_root[1] / 2 + 7 == 10:
-                        self.correct = 3
+            elif c.szeria_root[1] / 2 + 7 == 10:
+                self.correct = 3
 
-                    else:
-                        self.correct = 1
+            else:
+                self.correct = 1
 
-        if not sarga and self.drotok_color[2] == 0 and c.cells[2:4] == [True, True]:
+        elif self.drotok_color[2] == 0 and c.cells[2:4] == [True, True]:
             self.correct = 0
 
         elif f.count(self.drotok_color, 1) == 2 and f.count(self.drotok_color, 2) == 0:
