@@ -5,7 +5,7 @@ import Moduls.common as c
 
 class Panel:
     def __init__(self, index:int = None, image:pygame.surface.Surface = il.kerdes_modul_img, pos:tuple=(0, 0), done:bool=False, scaling:float|int = 1) -> None:
-        self.id = "kerdes"
+        self.id = "Kerdes"
         self.pos = pos
         self.scaling = scaling
         self.index = index

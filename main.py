@@ -147,13 +147,15 @@ class StartPage:
                 test_write(c.szeria_root[0], c.cells, c.stickers)
 
 
+                all_updatable_object.append(properties)
+                
                 for modul in moduls:
                     all_updatable_object.append(modul)
 
-                    if modul.id == "jelszo":
+                    if modul.id == "Jelszo":
                         modul.update_list = all_updatable_object
 
-                    if modul.id == "lib_mondja":
+                    if modul.id == "LibaMondja":
                         sti_page.lib_mon = modul
 
             else:
@@ -212,6 +214,7 @@ class MenuPage:
 
         if self.quit_button.puss_button_draw(il.quit_le):
             pygame.quit()
+            exit()
 
         if self.resume_button.puss_button_draw(il.resume_le):
             self.active = False
@@ -219,7 +222,7 @@ class MenuPage:
             if running:
                 g_page.active = True
                 for modul in moduls:
-                    if modul.id == "lib_modja":
+                    if modul.id == "LibaMondja":
                         modul.start = moduls[0].szamlalo.current_seconds - 1
             else:
                 sta_page.active = True
@@ -333,7 +336,7 @@ class StickerPage:
             sti_page.active = False
             g_page.active = True
             for modul in moduls:
-                if modul.id == "lib_modja":
+                if modul.id == "LibaMondja":
                     modul.start = moduls[0].szamlalo.current_seconds - 1
 
         for event in pygame.event.get():
@@ -346,7 +349,7 @@ class StickerPage:
                     sti_page.active = False
                     g_page.active = True
                     for modul in moduls:
-                        if modul.id == "lib_modja":
+                        if modul.id == "LibaMondja":
                             modul.start = moduls[0].szamlalo.current_seconds - 1
 
             elif event.type == pygame.VIDEORESIZE:
@@ -509,17 +512,6 @@ while True:
         if page.active == True:
             page.draw()
 
-    """if g_page.active:
-        g_page.draw()
-    elif sti_page.active:
-        sti_page.draw()
-    elif m_page.active:
-        m_page.draw()
-    elif sta_page.active:
-        sta_page.draw()
-    elif e_page.active:
-        e_page.draw()"""
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -532,3 +524,4 @@ while True:
     c.clock.tick(60)
 
 pygame.quit()
+exit()

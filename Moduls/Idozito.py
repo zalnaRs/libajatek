@@ -4,7 +4,7 @@ import Moduls.img_load as il
 
 class Panel:
     def __init__(self, index:int = None, image:pygame.surface.Surface = il.idozito_modul_img, pos:tuple=(0, 0), done:bool=True, scaling:float|int = 1) -> None:
-        self.id = "idozito"
+        self.id = "Idozito"
         self.pos = pos
         self.scaling = scaling
         self.index = index
