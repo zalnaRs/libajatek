@@ -9,6 +9,16 @@ def count(adat:list|str, elem) -> int:
     return(c)
 
 
+def maximum(adat:list[int]) -> int:
+    max_e = adat[0]
+    for e in adat[1:]:
+        if e > max_e:
+            max_e = e
+
+    return max_e
+
+
+
 def generate_drotok() -> list[tuple[int, bool]]:
     ures = [0, 0, 0]
     ures[0] += r.randint(0,4)

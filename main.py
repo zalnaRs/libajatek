@@ -1,6 +1,8 @@
-import os, pygame
+import os
+import pygame
 from sys import exit
 import Moduls.common as c
+import Moduls.defs as f
 
 """
 FONTOS!! generate_bomb():
@@ -65,7 +67,7 @@ class StartPage:
         self.make = True
 
     def draw(self):
-        global moduls, properties, all_updatable_object, running ,miss_write, levels, explosion
+        global moduls, properties, all_updatable_object, running ,miss_write, levels, explosion, error_margin
 
         if self.make:
             
@@ -106,15 +108,19 @@ class StartPage:
                 if levels[0]:
                     time = 480
                     create_moduls = [0, 1, 1, 2, 3]
+                    error_margin = 1
                 elif levels[1]:
                     time = 480
                     create_moduls = [0, 3, 3, 2, 5]
+                    error_margin = 1
                 elif levels[2]:
                     time = 480
                     create_moduls = [0, 2, 4, 5, 5, 6]
+                    error_margin = 1
                 elif levels[3]:
                     time = 480
                     create_moduls = [0, 2, 3, 4, 4, 6]
+                    error_margin = 1
 
                 explosion = False
 
@@ -434,9 +440,12 @@ def check_done_moduls_num(): #Megnézi, hogy mennyi kész modul van.
 
 
 def check_if_game_done(): #Ha az összes modul kész van akkor lefutatja a end_game-t.
+    global error_margin
     for i in range(len(moduls)):
         if moduls[i].mistake == True:
-            boom()
+            error_margin -= 1
+            if error_margin == 0:
+                boom()
 
     if check_done_moduls_num() != len(moduls):
         return False
@@ -457,7 +466,56 @@ def end_game(): #Ha a játék véget ér, akkor ez a függvény fut le. :return:
         if levels[i] is True:
             szint = i + 1
 
-    file = open(rf"eredmenyek/{sta_page.csapat_input.value}_{szint}.txt", "w", encoding="UTF-8")
+    history = os.listdir("eredmenyek")
+    hits = []
+
+    for file_name in history:
+
+        cs_name = ""
+        for chart in file_name:
+            if chart == "_":
+                break
+
+            else:
+                cs_name += chart
+        
+        if cs_name == sta_page.csapat_input.value:
+
+            level = ""
+            step = 0
+            for chart in file_name:
+                if chart == "_":
+                    step += 1
+
+                elif step == 1:
+                    level += chart
+
+            if int(level) == szint:
+                hits.append(file_name)
+
+
+    if len(hits) > 0:
+        num_list = []
+
+        for hit in hits:
+            step = 0
+            num = ""
+
+            for e in hit:
+                if e == "_" or e == ".":
+                    step += 1
+
+                elif step == 2:
+                    num += e
+            
+            num_list.append(int(num))
+
+            count = f.maximum(num_list)+1
+
+    else:
+        count = 1
+
+    file = open(rf"eredmenyek/{sta_page.csapat_input.value}_{szint}_{count}.txt", "w", encoding="UTF-8")
     # TODO: normális pontozás
     file.write(f"--------------\n{sta_page.csapat_input.value}\n--------------\nIdő: {moduls[0].szamlalo.current_seconds}\nPontszám: {check_done_moduls_num()-1}\n")
     if explosion:
